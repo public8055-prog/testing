@@ -1,0 +1,7 @@
+import { requireUser,requireAdmin } from "@/lib/auth";
+import { apiError,assertSameOrigin,HttpError,rateLimit,readJson } from "@/lib/http";
+import { adminData,adminMutation,createComplaint,createReview,customerData,toggleFavorite,updateProfile } from "@/lib/platform";
+export const dynamic="force-dynamic";
+export async function GET(req:Request){try{const user=await requireUser();const admin=new URL(req.url).searchParams.get("admin")==="1";return Response.json(admin?await adminData(await requireAdmin()):await customerData(user.id),{headers:{"Cache-Control":"no-store"}});}catch(error){return apiError(error);}}
+export async function POST(req:Request){try{assertSameOrigin(req);const user=await requireUser();await rateLimit(`platform:${user.id}`,60,60000);const input=await readJson(req);if(!input||typeof input!=="object")throw new HttpError(400,"Invalid request.");switch(input.action){case "profile":await updateProfile(user.id,input);break;case "favorite":return Response.json({saved:await toggleFavorite(user.id,String(input.serviceSlug||""))});case "review":await createReview(user.id,input);break;case "complaint":await createComplaint(user.id,input);break;default:throw new HttpError(400,"Unknown action.");}return Response.json({ok:true});}catch(error){return apiError(error);}}
+export async function PATCH(req:Request){try{assertSameOrigin(req);const user=await requireAdmin();await rateLimit(`platform-admin:${user.id}`,60,60000);await adminMutation(user,await readJson(req));return Response.json({ok:true});}catch(error){return apiError(error);}}

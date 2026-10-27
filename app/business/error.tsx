@@ -1,0 +1,2 @@
+"use client";
+export default function BusinessError({reset}:{reset:()=>void}){return <div className="mx-auto max-w-lg px-6 py-24 text-center"><h2 className="text-2xl font-semibold text-slate-900">Your workspace couldn’t load</h2><p className="mt-3 text-sm leading-6 text-slate-500">Your records are still saved. Try loading your workspace again.</p><button onClick={reset} className="mt-7 rounded-xl bg-teal-800 px-5 py-3 text-sm font-semibold text-white">Try again</button></div>;}

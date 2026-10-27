@@ -1,0 +1,3 @@
+"use client";
+import Link from "next/link";
+export default function ErrorPage({reset}:{error:Error & {digest?:string};reset:()=>void}){return <div className="uk-shell py-24 text-center"><p className="eyebrow justify-center">A SMALL INTERRUPTION</p><h1 className="mt-4 text-3xl font-semibold">We couldn’t load this page.</h1><p className="mt-4 text-sm text-[#768572]">Please try again. Your saved bookings and records will stay in your account.</p><button onClick={reset} className="uk-button mt-7">Try again</button><Link href="/" className="block mt-5 text-xs text-[#277d70]">Back to home</Link></div>;}

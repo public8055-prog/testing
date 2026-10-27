@@ -1,0 +1,118 @@
+# Local development only. Database listeners are bound to this computer.
+# Use authenticated TLS MongoDB/Redis endpoints and a multi-node replica set for deployment.
+name: urbankare-infra
+services:
+  mongo:
+    image: mongo:8.0
+    restart: unless-stopped
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.25"]
+    ports:
+      - "127.0.0.1:27018:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand({ping:1}).ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  mongo-init:
+    image: mongo:8.0
+    depends_on:
+      mongo:
+        condition: service_healthy
+    entrypoint: ["mongosh", "--host", "mongo:27017", "--quiet", "--eval"]
+    command: ["try { rs.status() } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}) }; let attempts=0; while (!db.hello().isWritablePrimary) { if (++attempts>60) throw new Error('Replica set did not become writable'); sleep(1000); }"]
+    restart: "no"
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "127.0.0.1:6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  # Opt in with --profile app. The default command starts only MongoDB and Redis.
+  app:
+    profiles: ["app"]
+    build:
+      context: .
+      target: runner
+    init: true
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+    environment: &local_app_environment
+      APP_URL: http://localhost:${APP_PORT:-3000}
+      COOKIE_SECURE: "false"
+      PUBLIC_LAUNCH_READY: "false"
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:-}
+      MONGODB_URI: mongodb://mongo:27017/?replicaSet=rs0&directConnection=true
+      MONGODB_DB: ${MONGODB_DB:-urbankare_mongo}
+      MONGODB_POOL_SIZE: ${MONGODB_POOL_SIZE:-20}
+      REDIS_URL: redis://redis:6379
+      REDIS_KEY_PREFIX: ${REDIS_KEY_PREFIX:-}
+      TRUST_PROXY: "false"
+      BUSINESS_LEGAL_NAME: ${BUSINESS_LEGAL_NAME:-}
+      BUSINESS_ADDRESS: ${BUSINESS_ADDRESS:-}
+      BUSINESS_SUPPORT_EMAIL: ${BUSINESS_SUPPORT_EMAIL:-}
+      GRIEVANCE_OFFICER_NAME: ${GRIEVANCE_OFFICER_NAME:-}
+      GRIEVANCE_EMAIL: ${GRIEVANCE_EMAIL:-}
+      PUBLIC_WHATSAPP_NUMBER: ${PUBLIC_WHATSAPP_NUMBER:-}
+      EMAIL_DELIVERY_URL: ${EMAIL_DELIVERY_URL:-}
+      EMAIL_DELIVERY_TOKEN: ${EMAIL_DELIVERY_TOKEN:-}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      PAYMENT_GATEWAY_PREFERENCE: ${PAYMENT_GATEWAY_PREFERENCE:-razorpay}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    stop_grace_period: 30s
+  worker:
+    profiles: ["app"]
+    build:
+      context: .
+      target: worker
+    init: true
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    environment:
+      <<: *local_app_environment
+      BACKUPS_ENABLED: ${BACKUPS_ENABLED:-false}
+      BACKUP_DIRECTORY: /var/lib/urbankare-backups
+      BACKUP_KEY_FILE: ${BACKUP_KEY_FILE:-}
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:-}
+      BACKUP_MAX_BYTES: ${BACKUP_MAX_BYTES:-104857600}
+    volumes:
+      - encrypted_backups:/var/lib/urbankare-backups
+    stop_grace_period: 30s
+volumes:
+  mongo_data:
+    name: urbankare-infra_mongo_data
+  redis_data:
+    name: urbankare-infra_redis_data
+  encrypted_backups:
+    name: urbankare-infra_encrypted_backups

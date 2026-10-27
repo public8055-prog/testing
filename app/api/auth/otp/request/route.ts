@@ -1,0 +1,5 @@
+import { z } from "zod";
+import { requestEmailOtp,type OtpPurpose } from "@/lib/auth-otp";
+import { apiError,assertSameOrigin,HttpError,rateLimit,readJson,requestIp } from "@/lib/http";
+const schema=z.object({email:z.string().trim().toLowerCase().max(254).pipe(z.email()),purpose:z.enum(["login","verify"]).default("login")});
+export async function POST(req:Request){try{assertSameOrigin(req);await rateLimit(`otp-ip:${requestIp(req)}`,10,900000);const parsed=schema.safeParse(await readJson(req));if(!parsed.success)throw new HttpError(400,"Enter the email address you signed up with.");await rateLimit(`otp-email:${parsed.data.email}`,3,900000);const purpose:OtpPurpose=parsed.data.purpose;await requestEmailOtp(parsed.data.email,purpose,requestIp(req));return Response.json({ok:true},{status:202,headers:{"Cache-Control":"no-store"}});}catch(error){return apiError(error);}}

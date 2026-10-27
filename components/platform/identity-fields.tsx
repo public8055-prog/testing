@@ -1,0 +1,11 @@
+"use client";
+const field = "mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm";
+export function identityFormValue(form: FormData) { return { identityKind: String(form.get("identityKind")), consent: form.get("identityConsent") === "on", redacted: form.get("redacted") === "on" }; }
+export function IdentityFields({ administered = false }: { administered?: boolean }) {
+  return <fieldset className="space-y-4 rounded-xl border border-slate-200 p-4 sm:col-span-2"><legend className="px-1 font-semibold">Required identity photo</legend>
+    <label className="block text-sm">Government photo ID<select name="identityKind" required className={field}><option value="masked_aadhaar">Masked Aadhaar card</option><option value="driving_licence">Driving licence</option><option value="passport">Passport</option><option value="voter_id">Voter ID</option></select></label>
+    <p className="text-sm leading-6 text-slate-600">Upload a readable photo showing the holder’s name and photograph. For Aadhaar, use a masked copy and cover the QR/barcode; never upload the full 12-digit number. For other IDs, cover unnecessary numbers, codes and personal details. JPEG, PNG or WebP only, up to 5 MB. Another listed ID is available if you do not wish to use Aadhaar. This is a manual document review, not UIDAI authentication.</p>
+    <label className="flex min-h-11 items-start gap-3 text-sm"><input name="redacted" type="checkbox" required className="mt-1 size-4 shrink-0"/><span>I confirm unnecessary identity numbers and QR/barcodes are masked and the name/photo remain readable.</span></label>
+    <label className="flex min-h-11 items-start gap-3 text-sm"><input name="identityConsent" type="checkbox" required className="mt-1 size-4 shrink-0"/><span>{administered ? "I have the vendor’s informed permission to submit this photo for private administrator review and have explained the purpose, alternatives and privacy notice." : "I consent to this photo being stored privately and reviewed by administrators to decide my provider application. I have read the privacy notice and understand another listed ID is available."} <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy notice</a></span></label>
+  </fieldset>;
+}

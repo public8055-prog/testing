@@ -1,0 +1,7 @@
+import { existsSync } from "node:fs";
+import { bootstrapAdministrator,seedAdministratorFromEnvironment } from "../lib/admin-bootstrap";
+import { closeMongo } from "../lib/mongo";
+import { closeRedis } from "../lib/redis";
+for(const file of[".env.production.local",".env.local",".env.production",".env"])if(existsSync(file))process.loadEnvFile(file);
+async function main(){if(process.env.SEED_ADMIN_EMAIL||process.env.SEED_ADMIN_PASSWORD)await seedAdministratorFromEnvironment();else{const identifier=process.env.ADMIN_BOOTSTRAP_ID,password=process.env.ADMIN_BOOTSTRAP_PASSWORD;if(!identifier||!password)throw new Error("Configure protected administrator seed variables.");await bootstrapAdministrator(identifier,password,process.env.ADMIN_BOOTSTRAP_NAME||"Platform Administrator");}delete process.env.ADMIN_BOOTSTRAP_PASSWORD;delete process.env.SEED_ADMIN_PASSWORD;console.log("Super administrator configured. Existing sessions were revoked. Sign in through /login with the supplied account identifier.");}
+main().catch(error=>{console.error(error instanceof Error&&error.name==="ZodError"?"Invalid bootstrap input. Use a valid seed email and a password of 10–128 characters.":"Administrator setup failed. Check the protected seed/bootstrap environment and MongoDB availability. No credentials were logged.");process.exitCode=1;}).finally(async()=>{delete process.env.ADMIN_BOOTSTRAP_PASSWORD;delete process.env.SEED_ADMIN_PASSWORD;await closeMongo();await closeRedis();});

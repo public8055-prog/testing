@@ -1,0 +1,68 @@
+# Production application processes only. Supply authenticated TLS MongoDB and
+# Redis endpoints from your deployment secret store. Local development services
+# are intentionally separate in docker-compose.infra.yml.
+name: urbankare
+services:
+  app:
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    init: true
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    ports:
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+    environment: &app_environment
+      MONGODB_URI: ${MONGODB_URI:?Supply an authenticated TLS MongoDB replica-set URI}
+      MONGODB_DB: ${MONGODB_DB:?Set the production MongoDB database name}
+      MONGODB_POOL_SIZE: ${MONGODB_POOL_SIZE:-20}
+      REDIS_URL: ${REDIS_URL:?Supply an authenticated rediss URL}
+      REDIS_KEY_PREFIX: ${REDIS_KEY_PREFIX:-}
+      APP_URL: ${APP_URL:?Set the public HTTPS application origin}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?Supply a base64-encoded 32-byte random signing key}
+      COOKIE_SECURE: "true"
+      TRUST_PROXY: ${TRUST_PROXY:-false}
+      EMAIL_DELIVERY_URL: ${EMAIL_DELIVERY_URL:-}
+      EMAIL_DELIVERY_TOKEN: ${EMAIL_DELIVERY_TOKEN:-}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      PAYMENT_GATEWAY_PREFERENCE: ${PAYMENT_GATEWAY_PREFERENCE:-razorpay}
+      BUSINESS_LEGAL_NAME: ${BUSINESS_LEGAL_NAME:-}
+      BUSINESS_ADDRESS: ${BUSINESS_ADDRESS:-}
+      BUSINESS_SUPPORT_EMAIL: ${BUSINESS_SUPPORT_EMAIL:-}
+      GRIEVANCE_OFFICER_NAME: ${GRIEVANCE_OFFICER_NAME:-}
+      GRIEVANCE_EMAIL: ${GRIEVANCE_EMAIL:-}
+      PUBLIC_WHATSAPP_NUMBER: ${PUBLIC_WHATSAPP_NUMBER:-}
+      PUBLIC_LAUNCH_READY: ${PUBLIC_LAUNCH_READY:-false}
+      GOOGLE_SITE_VERIFICATION: ${GOOGLE_SITE_VERIFICATION:-}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 45s
+      retries: 3
+    stop_grace_period: 30s
+  worker:
+    build:
+      context: .
+      target: worker
+    restart: unless-stopped
+    init: true
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    environment:
+      <<: *app_environment
+      BACKUPS_ENABLED: ${BACKUPS_ENABLED:-false}
+      BACKUP_DIRECTORY: /var/lib/urbankare-backups
+      BACKUP_KEY_FILE: ${BACKUP_KEY_FILE:-}
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:-}
+      BACKUP_MAX_BYTES: ${BACKUP_MAX_BYTES:-104857600}
+    volumes:
+      - encrypted_backups:/var/lib/urbankare-backups
+    stop_grace_period: 30s
+volumes:
+  encrypted_backups:

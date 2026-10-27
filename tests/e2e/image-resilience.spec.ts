@@ -1,0 +1,41 @@
+import { test, expect, type Locator } from "./fixtures";
+
+test("unavailable external photos fall back cleanly across mobile discovery, cart and checkout", async ({ page, baseURL }, info) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const origin = new URL(baseURL!).origin;
+  await page.route("**/*", route => route.request().resourceType() === "image" && new URL(route.request().url()).origin !== origin ? route.abort("failed") : route.continue());
+  const fallback = async (image: Locator) => {
+    await image.scrollIntoViewIfNeeded();
+    await expect(image).toHaveAttribute("data-image-fallback", "true");
+    await expect.poll(() => image.evaluate(node => (node as HTMLImageElement).complete && (node as HTMLImageElement).naturalWidth > 0)).toBe(true);
+    await expect(image).toHaveAttribute("src", "/images/service-fallback.svg");
+    const bounds = await image.boundingBox();
+    expect(bounds!.width).toBeGreaterThan(0); expect(bounds!.height).toBeGreaterThan(0);
+  };
+  await page.goto("/");
+  await fallback(page.locator(".hero-photo-main img"));
+  await fallback(page.locator(".hero-small-photo img"));
+  await page.goto("/search");
+  await fallback(page.locator("main article img").first());
+  await page.goto("/categories/home-cleaning");
+  await fallback(page.locator("main img").first());
+  await page.goto("/services/bathroom-deep-cleaning");
+  await fallback(page.locator("main img").first());
+  await page.getByRole("button", { name: "Add to cart", exact: true }).click();
+  await page.getByRole("button", { name: "Open cart, 1 items", exact: true }).click();
+  const drawer = page.getByRole("dialog", { name: /^Your Cart/ });
+  await expect(drawer).toBeVisible();
+  await fallback(drawer.locator("img").first());
+  await expect(drawer.getByRole("button", { name: "Close cart", exact: true })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  await page.goto("/cart");
+  await fallback(page.locator("main img").first());
+  await page.goto("/checkout");
+  const image = page.locator("main img").first();
+  await fallback(image);
+  const bounds = await image.boundingBox();
+  expect(bounds!.width).toBe(44); expect(bounds!.height).toBe(44);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  await page.screenshot({ path: info.outputPath("mobile-checkout-image-fallback.png"), fullPage: true });
+});

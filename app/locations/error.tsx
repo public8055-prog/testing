@@ -1,0 +1,2 @@
+"use client";
+export default function LocationError({reset}:{reset:()=>void}){return <div className="mx-auto max-w-xl px-5 py-16"><h1 className="text-2xl font-semibold">Service location could not load</h1><p className="my-5 text-sm">Your saved booking details are retained. Check your connection and try again.</p><button type="button" className="min-h-11 rounded-xl border px-5" onClick={reset}>Retry service location</button></div>;}

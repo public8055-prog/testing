@@ -1,0 +1,9 @@
+:global(html[data-theme="dark"]) .queue{background:var(--app-background,#07131f);color:var(--app-text,#e5edf5);border-color:var(--app-border,#293d50)}
+:global(html[data-theme="dark"]) .queue :global(.bg-white),:global(html[data-theme="dark"]) .queue input,:global(html[data-theme="dark"]) .queue select{background:var(--app-surface,#10202f);color:var(--app-text,#e5edf5)}
+:global(html[data-theme="dark"]) .queue [class*="border-slate-"]{border-color:var(--app-border,#293d50)}
+:global(html[data-theme="dark"]) .queue [class*="text-slate-"]{color:var(--app-muted,#a8bdcc)}
+:global(html[data-theme="dark"]) .queue :global(.text-slate-900){color:var(--app-text,#e5edf5)}
+:global(html[data-theme="dark"]) .queue :global(.bg-slate-100){background:var(--app-raised,#1b3043)}
+:global(html[data-theme="dark"]) .queue :global(.bg-teal-50){background:#10352f;color:#a6edda}
+:global(html[data-theme="dark"]) .queue :global(.text-teal-800){color:#93e5cd}
+:global(html[data-theme="dark"]) .queue :global(.bg-rose-50){background:#3e2029;color:#ffc3cf}

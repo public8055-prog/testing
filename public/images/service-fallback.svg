@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <title>UrbanKare service illustration</title>
+  <rect width="800" height="600" fill="#F1F4EF"/>
+  <circle cx="55" cy="60" r="245" fill="#E8EFE7"/>
+  <circle cx="790" cy="590" r="270" fill="#E3ECE6"/>
+  <path d="M-40 485C155 370 210 570 425 440C590 342 655 408 840 310" stroke="#D9E6DC" stroke-width="2"/>
+  <rect x="292" y="190" width="216" height="216" rx="58" fill="#162F39"/>
+  <path d="M341 286L400 236L459 286M353 276V349C353 355 357 359 363 359H437C443 359 447 355 447 349V276" stroke="#F8FAF6" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M386 358V313H414V358" stroke="#F8FAF6" stroke-width="10" stroke-linejoin="round"/>
+  <circle cx="495" cy="393" r="25" fill="#90BFA1" stroke="#F1F4EF" stroke-width="8"/>
+  <path d="M549 185V217M533 201H565" stroke="#6B9B83" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="252" cy="373" r="7" fill="#8AAF99"/>
+</svg>

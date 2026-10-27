@@ -1,0 +1,3 @@
+import Link from "next/link";
+import {ArrowUpRight,Search} from "lucide-react";
+export default function NotFound(){return <div className="uk-shell py-24 text-center"><Search className="mx-auto text-[#277d70]" size={35}/><p className="mt-7 text-xs tracking-[.2em] text-[#78917a]">404 · A LITTLE DETOUR</p><h1 className="mt-4 text-4xl font-semibold tracking-tight text-[#162f39]">This page has moved out.</h1><p className="mt-4 text-sm text-[#7a887c]">Let’s get you back to finding a helping hand.</p><Link href="/services" className="uk-button mt-8">Explore services <ArrowUpRight size={16}/></Link><Link href="/" className="block mt-5 text-xs text-[#277d70]">Back to home</Link></div>;}
