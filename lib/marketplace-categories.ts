@@ -1,6 +1,8 @@
 import { activeCatalogFilter, initDb } from "./db";
 import { getMongoDb, mongoCollection } from "./mongo";
 import type { Category } from "./types";
+import {isBuiltinCatalog} from "./runtime-config.mjs";
+import {builtinCategories} from "./builtin-catalog";
 
 export type MarketplaceCategory = Category & {active?:boolean;archived?:boolean};
 const initialized = new Map<string,Promise<void>>();
@@ -15,6 +17,7 @@ export async function ensureMarketplaceCategories(){
   return initialized.get(key)!;
 }
 export async function readMarketplaceCategories(includeInactive=false):Promise<MarketplaceCategory[]>{
+  if(isBuiltinCatalog())return builtinCategories();
   await ensureMarketplaceCategories();
   // Category approval is an authorization input: always use Mongo's current state here.
   const db=await getMongoDb();

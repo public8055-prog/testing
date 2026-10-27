@@ -8,6 +8,7 @@ import { ServiceUpdates } from "@/components/operations/service-updates";
 import { AccountSessionProvider } from "@/components/site/session-provider";
 import { MobileNavigation } from "@/components/site/mobile-navigation";
 import { businessDetails } from "@/lib/business";
+import {isBuiltinCatalog} from "@/lib/runtime-config.mjs";
 export const dynamic = "force-dynamic";
 const business = businessDetails();
 
@@ -25,13 +26,15 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#ffffff" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const catalogOnly=isBuiltinCatalog();
   return (
     <html lang="en" className="h-full" data-scroll-behavior="smooth">
       <body className="app-body flex min-h-full flex-col bg-[#fafafa] text-zinc-900 antialiased">
-        <AccountSessionProvider>
+        <AccountSessionProvider catalogOnly={catalogOnly}>
           <CartHydration />
           <Header />
           <VerifyEmailBanner />
+          {catalogOnly&&<aside aria-label="Service availability" className="border-b border-teal-200 bg-teal-50 px-5 py-3 text-center text-sm leading-6 text-teal-900">Explore our services and indicative prices. Online bookings are not open yet.</aside>}
           <main id="main-content" className="flex-1">{children}</main>
         <Footer />
         <ServiceUpdates />

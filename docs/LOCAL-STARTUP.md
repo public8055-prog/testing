@@ -1,3 +1,7 @@
+# Current default: Docker-free catalogue
+
+As of 28 October 2026, Docker is optional. See [DOCKER-FREE.md](DOCKER-FREE.md). The public site runs on built-in catalogue data without MongoDB/Redis. Automatic infrastructure startup now requires explicit `AUTO_START_LOCAL_INFRA=true` and is always skipped on Vercel. The following report is retained as historical Docker recovery evidence, not default startup instructions.
+
 # Local startup and Docker recovery — 26 October 2026
 
 Run `npm run dev` for development, or `npm run build -- --webpack` followed by `npm start` for the production build. A separate `npm run infra:up` is optional. All three host launchers check the configured local MongoDB/Redis endpoints, start Docker Desktop if needed, wait for its engine, start this project's persistent data services, verify their readiness and initialize missing indexes/catalogue records before serving the application.

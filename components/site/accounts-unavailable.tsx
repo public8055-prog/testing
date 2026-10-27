@@ -1,0 +1,2 @@
+import Link from "next/link";
+export function AccountsUnavailable(){return <section className="mx-auto max-w-xl px-5 py-16"><h1 className="text-3xl font-semibold tracking-tight">Accounts are not open yet</h1><p className="mt-5 text-sm leading-7 text-slate-700">You can browse the full service catalogue now. Online accounts, bookings and payments will become available when the service launches.</p><Link href="/search" className="mt-7 inline-flex min-h-11 items-center rounded-xl bg-teal-900 px-5 py-3 text-sm font-semibold text-white">Browse all services</Link></section>;}

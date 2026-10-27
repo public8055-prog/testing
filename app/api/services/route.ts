@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readServices } from "@/lib/db";
 import { apiError, HttpError } from "@/lib/http";
+import {catalogCacheControl} from "@/lib/runtime-config.mjs";
 
 export async function GET(req: Request) {
  try {
@@ -17,6 +18,6 @@ export async function GET(req: Request) {
         s.title.toLowerCase().includes(q) ||
         s.description.toLowerCase().includes(q)
     );
-  return NextResponse.json({ services: out.slice((page - 1) * limit, page * limit), total: out.length, page, limit },{headers:{"Cache-Control":"no-store"}});
+  return NextResponse.json({ services: out.slice((page - 1) * limit, page * limit), total: out.length, page, limit },{headers:{"Cache-Control":catalogCacheControl()}});
  } catch(e){return apiError(e);}
 }

@@ -2,6 +2,8 @@
 
 This maps the expanded checklist to source and executed acceptance evidence. The complete TypeScript suite passed **119/119**, followed by **12/12 focused startup checks** containing one additional shutdown regression. All **53 distinct Chrome checks** have passing latest results across the recorded runs, and **9 selected WebKit checks** passed. TypeScript, lint and Windows/Linux production builds passed. **Implemented** does not mean externally deployed or certified; [VALIDATION.md](VALIDATION.md) records exact evidence, corrections and remaining operating limits. The latest encrypted snapshot/restore verified 49 collections and 179 documents; older snapshots remain retained.
 
+The latest default is now a Docker-free, built-in public catalogue. [DOCKER-FREE.md](DOCKER-FREE.md) documents the 48 services/12 categories, public-only boundaries and Vercel setup. Database-backed accounts, admin operations, bookings and payments remain implemented but require separately configured persistent hosted services. The historical aggregate results above are not a certification of those newly provisioned services.
+
 ## 1. Authentication, accounts and roles
 
 | Requirement | Implementation | Evidence / boundary |

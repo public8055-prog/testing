@@ -1,3 +1,5 @@
+import {redirect} from "next/navigation";
+import {isBuiltinCatalog} from "@/lib/runtime-config.mjs";
 import { ResilientImage } from "@/components/ui/resilient-image";
 import Link from "next/link";
 import { Search, MapPin, ArrowUpRight, ShieldCheck, Clock3, SlidersHorizontal, Sparkles } from "lucide-react";
@@ -9,7 +11,7 @@ export const dynamic="force-dynamic";
 export const metadata={title:"Find local professionals | UrbanKare",description:"Discover local service professionals, compare their skills and prices, and request hourly, full-day or monthly services."};
 const field="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none focus:border-teal-600";
 export default async function ServicesPage({searchParams}:{searchParams:Promise<Record<string,string|string[]|undefined>>}){
-  const params=await searchParams; const get=(key:string)=>typeof params[key]==="string"?params[key] as string:"";
+  const params=await searchParams; if(isBuiltinCatalog()){const query=new URLSearchParams();for(const [key,value]of Object.entries(params))if(typeof value==="string")query.set(key,value);redirect(`/search${query.size?`?${query}`:""}`);} const get=(key:string)=>typeof params[key]==="string"?params[key] as string:"";
   const filters={q:get("q"),category:get("category"),city:get("city"),date:get("date"),max:Number(get("max"))||undefined,verified:get("verified")==="1",sort:get("sort"),page:Number(get("page"))||1,rating:Number(get("rating"))||undefined,duration:get("duration"),experience:Number(get("experience"))||undefined};
   const {providers,count,page,pages}=await listMarketplaceProviders(filters); const categories=await readMarketplaceCategories(); const marketplaceCategories=categories.map(c=>c.name);
   const services=await readServices(); const selectedCategory=categories.find(c=>c.slug===filters.category)?.name||filters.category;

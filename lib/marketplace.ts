@@ -10,6 +10,7 @@ import { prepareQueueNumber } from "./queue-numbering";
 import { withDistributedLock } from "./redis";
 import { syncQueueBookingStatus,publishQueueBooking } from "./queue-state";
 import { isAccountActive } from "./roles";
+import {isBuiltinCatalog} from "./runtime-config.mjs";
 
 export const marketplaceCategories = ["Housekeeping", "Home cleaning", "Electricians", "Plumbers", "Carpenters", "Drivers", "Home tutors", "Household support"] as const;
 export const marketplaceCategorySlugs: Record<string,string> = {housekeeping:"Housekeeping","home-cleaning":"Home cleaning",electrician:"Electricians",plumbing:"Plumbers",carpentry:"Carpenters",drivers:"Drivers","home-tutors":"Home tutors","household-support":"Household support"};
@@ -91,10 +92,12 @@ function reviewSummaryStages():Document[]{return[
   {$unset:["_id","_reviews","reservation_version","verification_reason","reviewer_id","reviewed_at"]},
 ];}
 export async function getMarketplaceProvider(id:string):Promise<MarketplaceProvider|null>{
+  if(isBuiltinCatalog())return null;
   await ensureMarketplace();const categories=await readMarketplaceCategories();
   const [p]=await(await getMongoDb()).collection<ProviderDocument>("marketplace_providers").aggregate<MarketplaceProvider>([{$match:{id,active:1,category:{$in:categories.map(c=>exactCategory(c.name))}}},...reviewSummaryStages()]).toArray();return p||null;
 }
 export async function listMarketplaceProviders(filters:{q?:string;category?:string;city?:string;max?:number;verified?:boolean;sort?:string;page?:number;date?:string;rating?:number;duration?:string;experience?:number}={}){
+  if(isBuiltinCatalog())return {providers:[] as MarketplaceProvider[],count:0,page:1,pages:0};
   await ensureMarketplace();const categories=await readMarketplaceCategories(),db=await getMongoDb();
   const empty={providers:[] as MarketplaceProvider[],count:0,page:1,pages:0};if(!categories.length)return empty;
   const priceColumn=filters.duration==="full_day"?"daily_rate":filters.duration==="monthly"?"monthly_rate":"hourly_rate";

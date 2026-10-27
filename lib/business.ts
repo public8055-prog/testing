@@ -1,7 +1,8 @@
 export function businessDetails() {
   const email = process.env.BUSINESS_SUPPORT_EMAIL?.trim() || "";
-  const phone = process.env.PUBLIC_WHATSAPP_NUMBER?.replace(/\D/g, "") || "";
-  const domain = process.env.APP_URL || "http://localhost:3000";
+  const phone = (process.env.PUBLIC_WHATSAPP_NUMBER ?? "919717621336").replace(/\D/g, "");
+  const deployment=process.env.VERCEL_PROJECT_PRODUCTION_URL||process.env.VERCEL_URL;
+  const domain = process.env.APP_URL || (process.env.VERCEL==="1"&&deployment?`https://${deployment}`:"http://localhost:3000");
   let publicOrigin: string | null = null;
   try { const url = new URL(domain); if (url.protocol === "https:" && !/^(localhost|127\.|\[::1\])/.test(url.hostname)) publicOrigin = url.origin; } catch { /* No public deployment configured. */ }
   return {

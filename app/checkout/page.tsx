@@ -1,4 +1,6 @@
 "use client";
+import {useAccountSession} from "@/components/site/session-provider";
+import {AccountsUnavailable} from "@/components/site/accounts-unavailable";
 import { refreshSession, sessionFetch } from "@/lib/session-client";
 import { ResilientImage } from "@/components/ui/resilient-image";
 
@@ -20,6 +22,7 @@ const slots = SLOTS;
 
 export default function CheckoutPage() {
   const { lines, clear } = useCart();
+  const {catalogOnly}=useAccountSession();
   const router = useRouter();
   const [form, setForm] = useState({ name: "", phone: "", address: "", date: indiaDate(1), slot: "11:00 AM", payment: "cash" });
   const [loading, setLoading] = useState(false);
@@ -31,7 +34,7 @@ export default function CheckoutPage() {
   const {quote,loading:quoteLoading,error:quoteError}=useQuote(lines,form.date);
   const availability=quote?.slots||[];
   const idempotency=useRef("");
-  useEffect(()=>{fetch("/api/auth/me").then(r=>r.json()).then(async d=>{const session=d.requiresRefresh?await refreshSession():d;setSignedIn(!!session.user);if(session.user)setForm(f=>({...f,name:f.name||session.user.name}));}).catch(()=>setSignedIn(false));fetch("/api/payments/config").then(async r=>{if(!r.ok)throw new Error("Payment settings unavailable");return r.json();}).then(d=>setPaymentConfig(d)).catch(()=>setPaymentConfig(null));},[]);
+  useEffect(()=>{if(catalogOnly)return;fetch("/api/auth/me").then(r=>r.json()).then(async d=>{const session=d.requiresRefresh?await refreshSession():d;setSignedIn(!!session.user);if(session.user)setForm(f=>({...f,name:f.name||session.user.name}));}).catch(()=>setSignedIn(false));fetch("/api/payments/config").then(async r=>{if(!r.ok)throw new Error("Payment settings unavailable");return r.json();}).then(d=>setPaymentConfig(d)).catch(()=>setPaymentConfig(null));},[catalogOnly]);
 
   const detailed = quote?.items||[];
   const {subtotal=0,discount=0,visitFee=0,total=0}=quote||{};
@@ -79,6 +82,7 @@ export default function CheckoutPage() {
     }
   }
 
+  if(catalogOnly)return <AccountsUnavailable/>;
   return (
     <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6 sm:py-12">
       <Link href="/cart" className="inline-flex items-center gap-1 text-sm font-bold text-zinc-500 hover:text-zinc-900">

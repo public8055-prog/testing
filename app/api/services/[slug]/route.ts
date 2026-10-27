@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCatalogService, readServices } from "@/lib/db";
+import {catalogCacheControl} from "@/lib/runtime-config.mjs";
 
 export async function GET(
   _req: Request,
@@ -12,5 +13,5 @@ export async function GET(
   const related = (await readServices(service.category))
     .filter((s) => s.slug !== slug)
     .slice(0, 4);
-  return NextResponse.json({ service, related });
+  return NextResponse.json({ service, related },{headers:{"Cache-Control":catalogCacheControl()}});
 }

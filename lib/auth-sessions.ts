@@ -5,6 +5,7 @@ import { getMongoDb, withMongoTransaction } from "./mongo";
 import { HttpError } from "./http";
 import { canonicalRole, isAccountActive, isAdminRole } from "./roles";
 import type { AccountUser } from "./auth-types";
+import {isBuiltinCatalog} from "./runtime-config.mjs";
 import { auditAuthEvent } from "./auth-audit";
 import { createRefreshFamily, refreshFamilyInfo, rotateRefreshFamily, revokeRefreshFamily, revokeUserRefreshFamilies, ownsRefreshToken, isCurrentRefreshToken } from "./auth-state";
 
@@ -48,6 +49,7 @@ export async function readAccessClaims(token: string) {
   } catch (error) { if (error instanceof errors.JOSEError) return null; throw error; }
 }
 export async function sessionFromCookieHeader(header: string): Promise<{ user: AccountUser; accessExpiresAt: string } | null> {
+  if(isBuiltinCatalog())return null;
   const claims = await readAccessClaims(cookieValue(header, SESSION_COOKIE)); if (!claims) return null;
   const family = await refreshFamilyInfo(claims.familyId); if (!family || !family.active || family.userId !== claims.userId || family.expiresAt <= Date.now()) return null;
   const db = await getMongoDb();

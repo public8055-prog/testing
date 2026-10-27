@@ -24,7 +24,7 @@ export function usesManagedLocalData(environment=process.env){
 }
 /** @param {Record<string,string|undefined>} [environment] */
 export function installMayStartServices(environment=process.env){
-  return !environment.CI&&!environment.DOCKER_BUILD&&environment.NODE_ENV!=="production"&&environment.AUTO_START_LOCAL_INFRA!=="false";
+  return !environment.CI&&!environment.VERCEL&&!environment.DOCKER_BUILD&&environment.NODE_ENV!=="production"&&environment.AUTO_START_LOCAL_INFRA==="true";
 }
 function dockerExecutable(){
   if(process.platform!=="win32")return "docker";
@@ -58,7 +58,7 @@ export async function dataReady(environment=process.env){
 }
 /** @param {{initialize?:boolean,run?:typeof command,ready?:(environment:Record<string,string|undefined>)=>Promise<boolean>,sleep?:(milliseconds:number)=>Promise<unknown>,environment?:Record<string,string|undefined>}} [options] */
 export async function ensureLocalRuntime({initialize=true,run=command,ready=dataReady,sleep=delay,environment=process.env}={}){
-  if(environment.AUTO_START_LOCAL_INFRA==="false"||!usesManagedLocalData(environment))return {managed:false};
+  if(environment.AUTO_START_LOCAL_INFRA!=="true"||environment.VERCEL||!usesManagedLocalData(environment))return {managed:false};
   if(!await ready(environment)){
     console.log("Checking local MongoDB and Redis…");
     const docker=await run("docker",["--version"]);if(docker.code!==0)throw new Error("Docker Desktop is required for local MongoDB/Redis. Install it with the Linux/WSL2 engine, then run npm run dev again.");

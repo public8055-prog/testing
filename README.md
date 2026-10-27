@@ -25,12 +25,26 @@ docker-compose.yml           Production app/worker with external data services
 
 UrbanKare combines a service catalogue, professional marketplace, service queues and workforce attendance. It uses Next.js 16.4, React 19, TypeScript, native MongoDB, Redis and a Node WebSocket gateway. Prices, account permissions, record ownership and workflow transitions are checked on the server. [Requirement traceability](docs/REQUIREMENTS.md) maps features to source and tests; [validation](docs/VALIDATION.md) records executed checks and remaining acceptance work.
 
+## Start without Docker
+
+Use Node.js 24 and npm. A fresh checkout needs no database, Redis, authentication key or environment file for public catalogue browsing:
+
+```powershell
+npm ci
+npm run dev
+```
+
+Open [http://localhost:3000/](http://localhost:3000/). For production, run `npm run build -- --webpack` and `npm start`. Vercel uses `vercel.json`. The built-in catalogue contains 48 services, eight package categories and four recurring-professional categories. The latter correctly have no fabricated packages or providers. Prices are indicative; accounts, bookings, payments, administration and online support submissions stay closed until persistent hosted services are configured.
+
+`CATALOG_SOURCE=auto` selects built-in browsing when data connections are absent. Use `CATALOG_SOURCE=builtin` to select it explicitly with an existing environment file. `AUTO_START_LOCAL_INFRA=false` is now the default; Vercel always skips Docker startup. Hosted MongoDB Atlas and Redis can enable the complete operational system without Docker by selecting `CATALOG_SOURCE=database`. Configuration, consent/operational boundaries, public cache/rate-limit scope and deployment steps are in [DOCKER-FREE.md](docs/DOCKER-FREE.md).
+
 Administrators can add vendors with private identity photos, then separately approve/reject/suspend or block accounts. Masked Aadhaar is the primary ID option, with other government photo ID alternatives. **Website activity** combines recorded operations with filters and pagination; catalogue and ongoing-service boards remain available in the same administration navigation. [Vendor/admin guide](docs/PROVIDER-ADMIN.md) explains the workflow, consent, identity review and data storage.
 
 ## Where the data lives
 
 | Data | Current local location | Persistence |
 | --- | --- | --- |
+| Built-in public catalogue | `lib/data.ts` and `lib/builtin-catalog.ts`, bundled with the deployment | Read-only authored records; no database connection |
 | Application records and uploaded files | MongoDB database `urbankare_mongo`, host `127.0.0.1:27018`, replica set `rs0` | Docker volume `urbankare-infra_mongo_data`, mounted at `/data/db`; uploads use MongoDB GridFS `assets.files`/`assets.chunks` plus metadata |
 | Rate limits, refresh-session state, catalogue cache, queue candidates and live pub/sub | Redis at `127.0.0.1:6380` | Volume `urbankare-infra_redis_data`, AOF enabled; durable booking/queue/notification records remain in MongoDB |
 | Original migration evidence | `.data/backups/before-mongodb-2026-10-25T09-39-49-930Z.sqlite` and `mongodb-migration-2026-10-25T09-39-49-930Z.json` | Restricted historical files; not the live database |
@@ -40,9 +54,11 @@ The completed import recorded **31 collections / 159 documents** with matching c
 
 The supplied data containers are development-only: no authentication/TLS, loopback listeners and one replica-set member. Ports 27018/6380 avoid unrelated services on this workstation; do not stop those unrelated services. `docker compose down` retains volumes; adding `-v` deletes data and is not routine shutdown.
 
-The current development preview is [http://localhost:3000/](http://localhost:3000/) using `urbankare_mongo`. Local startup was verified on 26 October 2026, including restoration of the retained encrypted backup after Docker's previous storage was removed. See [startup verification](docs/LOCAL-STARTUP.md) and [BACKUPS.md](docs/BACKUPS.md). These processes are not a public deployment or automatic Windows startup services. The setup below remains the reproducible way to restart them.
+The current default preview at [http://localhost:3000/](http://localhost:3000/) uses the built-in public catalogue. Existing private database records and backups remain preserved. Docker-based startup/recovery was verified on 26 October 2026; that evidence in [LOCAL-STARTUP.md](docs/LOCAL-STARTUP.md) and [BACKUPS.md](docs/BACKUPS.md) now applies to the optional infrastructure mode below.
 
-## Local setup
+## Optional legacy local database setup
+
+This section applies only when deliberately opting into the original local database containers. For Docker-free browsing or hosted operational services, use the instructions above and DOCKER-FREE.md. This optional local mode requires `CATALOG_SOURCE=database` and `AUTO_START_LOCAL_INFRA=true` in addition to its connection settings.
 
 Use Node.js 24, npm, a running Docker Engine and Docker Compose v2 with Linux containers. On Windows, Docker Desktop must use its Linux-container backend (for example, WSL2). Installation/builds require access to the package and image registries; allow enough memory/disk for MongoDB, Redis and the Next build, and run heavy checks sequentially on constrained machines. Keep host ports 27018/6380 and the chosen web/internal ports free. Preserve an existing `.env.local`.
 
@@ -78,9 +94,9 @@ npm run dev
 
 Open `http://localhost:3000`. Keep `APP_URL` aligned with another chosen port. Review sample catalogue prices, illustrative profiles/photos and availability before public use; no reusable admin credentials or fake customer reviews are seeded.
 
-### Automatic local database startup
+### Explicitly opted-in local database startup
 
-`npm run dev`, `npm start`, and `npm run infra:up` now check the configured local MongoDB replica set and Redis. If they are unavailable, the launcher starts Docker Desktop through its CLI, waits for its engine, starts only this project's `mongo`, `mongo-init` and `redis` services, verifies a writable replica-set primary and Redis PING, and runs the idempotent index/catalogue initializer. Existing database volumes and records are retained. You no longer need a separate infrastructure command before each local run. MongoDB and Redis use `restart: unless-stopped` so Docker can restore them on its next launch.
+With explicit `AUTO_START_LOCAL_INFRA=true`, the host launchers can check and manage the original local MongoDB replica set and Redis, including Docker Desktop startup and index initialization. Existing database volumes and records are retained. This is optional compatibility behavior; the default public catalogue and Vercel do not use it.
 
 `npm install` / `npm ci` also attempts this setup when local environment configuration already exists. A Docker/WSL startup failure prints recovery instructions while leaving dependency installation successful; `dev` and `start` retry and refuse to serve the application until local data readiness succeeds. A fresh checkout without an environment file skips installation-time startup: configure `.env.local`, then run `npm run dev`. CI, Docker image builds, production-only installs and explicit `AUTO_START_LOCAL_INFRA=false` skip installation-time service startup.
 
@@ -92,7 +108,7 @@ Windows development defaults to Webpack after the observed Turbopack filesystem-
 
 Docker Desktop with Linux containers/WSL2 must be installed and its initial setup completed. If Docker reports a missing engine pipe, these commands attempt to start it automatically. If startup cannot complete, open Docker Desktop, resolve its WSL/first-run message, then retry. Stopping the web terminal leaves MongoDB/Redis and their persisted data available; deleting volumes is never part of startup or shutdown.
 
-## Production-style local run and Docker
+## Optional full-operation production run and Docker
 
 ```powershell
 npm run build -- --webpack

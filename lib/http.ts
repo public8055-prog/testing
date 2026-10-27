@@ -42,5 +42,5 @@ export async function rateLimit(key: string, limit: number, windowMs: number) {
 }
 export function requestIp(req: Request) {
   // Only trust forwarded headers behind an explicitly configured trusted proxy.
-  return process.env.TRUST_PROXY === "true" ? (req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown") : "local";
+  return process.env.TRUST_PROXY === "true"||process.env.VERCEL==="1" ? (req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown") : "local";
 }

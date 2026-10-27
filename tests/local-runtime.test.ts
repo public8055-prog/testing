@@ -2,7 +2,7 @@ import {strict as assert} from "node:assert";
 import {test} from "node:test";
 import {ensureLocalRuntime,usesManagedLocalData,installMayStartServices,developmentArguments} from "../scripts/local-runtime.mjs";
 
-const local={MONGODB_URI:"mongodb://127.0.0.1:27018/?replicaSet=rs0&directConnection=true",REDIS_URL:"redis://127.0.0.1:6380"};
+const local={AUTO_START_LOCAL_INFRA:"true",MONGODB_URI:"mongodb://127.0.0.1:27018/?replicaSet=rs0&directConnection=true",REDIS_URL:"redis://127.0.0.1:6380"};
 test("Windows development defaults to the verified bundler and preserves explicit CLI choices",()=>{
   assert.deepEqual(developmentArguments(["--port","3001"],"win32"),["--port","3001","--webpack"]);
   for(const flag of ["--webpack","--turbopack","--turbo","--help"]){const args=[flag];assert.deepEqual(developmentArguments(args,"win32"),args);}
@@ -13,8 +13,9 @@ test("automatic infrastructure is restricted to the exact uncredentialed local e
   for(const changed of [{MONGODB_URI:"mongodb://mongo:27017"},{MONGODB_URI:"mongodb://127.0.0.1:27017"},{MONGODB_URI:"mongodb+srv://cluster.example.test"},{REDIS_URL:"rediss://redis.example.test:6380"},{REDIS_URL:"redis://127.0.0.1:6379"},{REDIS_URL:"redis://qa:secret@127.0.0.1:6380"}])assert.equal(usesManagedLocalData({...local,...changed}),false);
 });
 test("installation avoids CI, production, Docker builds and explicit opt-outs",()=>{
-  assert.equal(installMayStartServices({}),true);
-  for(const environment of [{CI:"true"},{NODE_ENV:"production"},{DOCKER_BUILD:"1"},{AUTO_START_LOCAL_INFRA:"false"}])assert.equal(installMayStartServices(environment),false);
+  assert.equal(installMayStartServices({}),false);
+  assert.equal(installMayStartServices({AUTO_START_LOCAL_INFRA:"true"}),true);
+  for(const environment of [{CI:"true"},{VERCEL:"1"},{NODE_ENV:"production"},{DOCKER_BUILD:"1"},{AUTO_START_LOCAL_INFRA:"false"}])assert.equal(installMayStartServices({AUTO_START_LOCAL_INFRA:"true",...environment}),false);
 });
 test("healthy local services are reused without Docker calls or data reinitialization when requested",async()=>{
   assert.deepEqual(await ensureLocalRuntime({environment:local,initialize:false,ready:async()=>true,run:async()=>{throw new Error("Docker should not run");}}),{managed:true});

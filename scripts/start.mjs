@@ -7,13 +7,14 @@ import { createGateway } from "./gateway.mjs";
 import { validateContainerConfiguration } from "./container-entrypoint.mjs";
 import { resolvePublicOrigin } from "./public-origin.mjs";
 import { childExitCode } from "./process-lifecycle.mjs";
+import {isBuiltinCatalog} from "../lib/runtime-config.mjs";
 
 const workspace=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 // loadEnvFile preserves existing environment values, so shell settings win,
 // followed by the first file defining a key in Next's production precedence.
 for(const name of [".env.production.local",".env.local",".env.production",".env"]){const file=path.join(workspace,name);if(existsSync(file))process.loadEnvFile(file);}
 // Apply the same production security boundary when launched outside Docker.
-validateContainerConfiguration();
+if(!isBuiltinCatalog())validateContainerConfiguration();
 const packaged=existsSync(path.join(workspace,"server.js"));
 if(!packaged&&existsSync(path.join(workspace,"docker-compose.infra.yml"))){
   const {ensureLocalRuntime}=await import("./local-runtime.mjs");

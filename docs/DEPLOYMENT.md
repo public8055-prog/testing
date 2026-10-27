@@ -1,5 +1,7 @@
 # Deployment and operations
 
+For the current Docker-free public catalogue and Vercel deployment, start with [DOCKER-FREE.md](DOCKER-FREE.md). The following database, worker and container instructions describe optional full operational services. Public browsing does not require them, and automatic Docker startup now requires explicit opt-in.
+
 This is a deployment procedure for the current MongoDB/Redis application. Recorded checks belong in [VALIDATION.md](VALIDATION.md); this document does not certify an external deployment.
 
 ## Processes and storage

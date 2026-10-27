@@ -4,6 +4,8 @@ import { services } from "./data";
 import type { Booking, Category, Professional, Service } from "./types";
 import { closeMongo, getMongoDb, mongoCollection, withMongoTransaction } from "./mongo";
 import { cachedJson, closeRedis } from "./redis";
+import {isBuiltinCatalog} from "./runtime-config.mjs";
+import {builtinCategories,builtinService,builtinServices} from "./builtin-catalog";
 
 let initialized: Promise<void> | undefined;
 export function databaseDriver() { return "mongodb" as const; }
@@ -92,6 +94,7 @@ export async function getBooking(id: string, userId?: string): Promise<Booking |
   return rows[0] ? mapBooking(rows[0]) : null;
 }
 export async function readCategories(): Promise<Category[]> {
+  if(isBuiltinCatalog())return builtinCategories();
   await initDb();
   return cachedJson("categories", 30, async () => {
     const rows = await (await mongoCollection("categories")).aggregate([
@@ -102,6 +105,7 @@ export async function readCategories(): Promise<Category[]> {
   });
 }
 export async function readServices(category?: string): Promise<Service[]> {
+  if(isBuiltinCatalog())return builtinServices(category);
   await initDb();
   return cachedJson(`services:${category || "all"}`, 30, async () => {
     const active = await (await mongoCollection("categories")).find(activeCatalogFilter, { projection: { slug: 1 } }).toArray();
@@ -112,12 +116,14 @@ export async function readServices(category?: string): Promise<Service[]> {
   });
 }
 export async function getCatalogService(slug: string): Promise<Service | null> {
+  if(isBuiltinCatalog())return builtinService(slug);
   await initDb();
   const row = await (await mongoCollection("services")).findOne({ slug, ...activeCatalogFilter });
   if (row && !await (await mongoCollection("categories")).findOne({ slug: row.category, ...activeCatalogFilter })) return null;
   return row ? { ...services.find(s => s.slug === slug), ...parsePayload<Service>(row.payload), price: Number(row.price) } : null;
 }
 export async function readProfessionals(): Promise<Professional[]> {
+  if(isBuiltinCatalog())return [];
   await initDb();
   return (await (await mongoCollection("professionals")).find({}).sort({ id: 1 }).toArray()).map(row => parsePayload<Professional>(row.payload));
 }

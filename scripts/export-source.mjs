@@ -13,12 +13,12 @@ import path from "node:path";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const roots = ["app", "components", "lib", "hooks", "store", "scripts", "tests", "docs", "public", "config"];
 const rootFiles = [
-  "README.md", "AGENTS.md", "CLAUDE.md", "package.json", "package-lock.json", ".env.example",
+  "README.md", "AGENTS.md", "CLAUDE.md", "package.json", "package-lock.json", ".env.example", "vercel.json",
   ".gitignore", ".dockerignore", "Dockerfile", "docker-compose.yml", "docker-compose.infra.yml",
   "next.config.ts", "next.config.mjs", "next.config.js", "next-env.d.ts", "proxy.ts", "middleware.ts",
   "eslint.config.mjs", "postcss.config.mjs", "playwright.config.ts", "tsconfig.json", "components.json",
 ];
-const excludedDirectories = new Set(["node_modules", "artifacts", "logs", "coverage", "test-results", "playwright-report", "uploads"]);
+const excludedDirectories = new Set(["node_modules", "artifacts", "logs", "coverage", "test-results", "playwright-report", "uploads", ".vercel"]);
 const excludedFiles = /(?:\.(?:log|tsbuildinfo|pem|key|p12|pfx|jks|keystore|sqlite(?:3)?|db|bak|backup|zip|tar|tgz|gz|7z)$|^(?:credentials|secrets)(?:\.|$))/i;
 const archiveName = "urbankare-source.tar.gz", manifestName = "urbankare-source.manifest.json";
 const maxFileBytes = 64 * 1024 * 1024;

@@ -12,6 +12,7 @@ import { isAccountActive, isAdminRole } from "./roles";
 import { requirePersistedAdmin } from "./admin-access";
 import { adminManagementMutation, isManagementAction, assertApprovedProviderDocuments } from "./admin-management";
 import { validateUploadReference } from "./uploads";
+import {isBuiltinCatalog} from "./runtime-config.mjs";
 
 type Actor={id:string;role:string};
 type Row=Document & {_id:string};
@@ -41,8 +42,9 @@ export async function ensurePlatform(){
  })().catch(error=>{ready=undefined;throw error;});return ready;
 }
 export function assertAdministrator(actor:Actor){if(!isAdminRole(actor.role))throw new HttpError(403,"Administrator access required.");}
-export async function readPlatformConfig():Promise<Record<string,string>>{await ensurePlatform();const rows=await(await getMongoDb()).collection<Row>("platform_config").find({},{projection:{key:1,value:1}}).toArray();return Object.fromEntries(rows.map(r=>[String(r.key),String(r.value)]));}
+export async function readPlatformConfig():Promise<Record<string,string>>{if(isBuiltinCatalog())return {};await ensurePlatform();const rows=await(await getMongoDb()).collection<Row>("platform_config").find({},{projection:{key:1,value:1}}).toArray();return Object.fromEntries(rows.map(r=>[String(r.key),String(r.value)]));}
 export async function getActiveBanners(now=new Date()):Promise<PlatformBanner[]>{
+ if(isBuiltinCatalog())return [];
  await ensurePlatform();const timestamp=now.toISOString();
  const candidates=await cachedJson<PlatformBanner[]>("public-banners",30,async()=>{
   const rows=await(await getMongoDb()).collection<Row>("platform_banners").find({active:true,deleted:{$ne:true}}).sort({position:1,created_at:1}).toArray();

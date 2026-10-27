@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-store";
 import { formatINR } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import {useAccountSession} from "@/components/site/session-provider";
 
 export function BuyBox({ slug, price }: { slug: string; price: number }) {
   const [qty, setQty] = useState(1);
@@ -13,7 +15,9 @@ export function BuyBox({ slug, price }: { slug: string; price: number }) {
   const setStoreQty = useCart((s) => s.setQty);
   const lines = useCart((s) => s.lines);
   const router = useRouter();
+  const {catalogOnly}=useAccountSession();
   const inCart = lines.find((l) => l.slug === slug);
+  if(catalogOnly)return <div className="rounded-xl border border-teal-200 bg-teal-50 p-5"><p className="font-semibold text-teal-950">Explore this service</p><p className="mt-2 text-sm leading-6 text-teal-900">Online booking is not open yet. This price is indicative; availability and a final quote will be confirmed before booking.</p><Link href="/contact" className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-teal-900 px-4 py-3 text-sm font-semibold text-white">Contact support</Link></div>;
 
   const addMany = () => {
     for (let i = 0; i < qty; i++) add(slug);

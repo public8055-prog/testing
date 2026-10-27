@@ -3,6 +3,8 @@ import { apiError, rateLimit, requestIp } from "./lib/http";
 import { isAllowedRequestOrigin, publicRequestUrl } from "./lib/request-origin";
 import { getUserFromCookieHeader, getRefreshUserFromCookieHeader, REFRESH_COOKIE } from "./lib/auth-sessions";
 import { isAdminRole } from "./lib/roles";
+import {isBuiltinCatalog,isBuiltinPublicRead} from "./lib/runtime-config.mjs";
+import {limitPublicRead} from "./lib/public-read-limit";
 
 export async function proxy(request: NextRequest) {
   const publicUrl = new URL(publicRequestUrl(request.url));
@@ -14,14 +16,17 @@ export async function proxy(request: NextRequest) {
   const configurationPath = /^\/(?:package(?:-lock)?\.json|(?:next|eslint)\.config\.[a-z]+|tsconfig(?:\.[a-z-]+)?\.json|docker-compose(?:\.[a-z-]+)?\.ya?ml|Dockerfile|AGENTS\.md|README\.md)(?:\/|$)/i.test(path);
   if (privatePath || configurationPath) return new NextResponse("Not found", { status: 404, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
   const api = path.startsWith("/api/"), administration = path === "/admin" || path.startsWith("/admin/") || path.startsWith("/api/admin/");
+  const builtin=isBuiltinCatalog(),publicRead=builtin&&isBuiltinPublicRead(path,request.method),publicPreflight=builtin&&request.method==="OPTIONS"&&isBuiltinPublicRead(path,"GET");
   try {
     if (api) {
-      await rateLimit(`global-api:${requestIp(request)}`, 100, 60000);
-      if (!isAllowedRequestOrigin(publicUrl.href, request.headers.get("origin"), process.env.APP_URL)) return NextResponse.json({ error: "Request origin is not allowed." }, { status: 403, headers: { "Cache-Control": "no-store" } });
-      if (request.method === "OPTIONS") return new NextResponse(null, { status: 204, headers: { "Access-Control-Allow-Origin": request.headers.get("origin") || publicUrl.origin, "Access-Control-Allow-Credentials": "true", "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Idempotency-Key", "Vary": "Origin", "Cache-Control": "no-store" } });
+      if(builtin&&!publicRead&&!publicPreflight)return NextResponse.json({error:"Online accounts, bookings and support requests are not available yet. Please use the public contact options.",code:"OPERATIONS_NOT_CONFIGURED"},{status:administration?404:503,headers:{"Cache-Control":"no-store","Retry-After":"300"}});
+      if(publicRead||publicPreflight)limitPublicRead(requestIp(request));else await rateLimit(`global-api:${requestIp(request)}`, 100, 60000);
+      if (!isAllowedRequestOrigin(publicUrl.href, request.headers.get("origin"), builtin?undefined:process.env.APP_URL)) return NextResponse.json({ error: "Request origin is not allowed." }, { status: 403, headers: { "Cache-Control": "no-store" } });
+      if (request.method === "OPTIONS") return new NextResponse(null, { status: 204, headers: { "Access-Control-Allow-Origin": request.headers.get("origin") || publicUrl.origin, "Access-Control-Allow-Credentials": "true", "Access-Control-Allow-Methods": builtin?"GET, HEAD, OPTIONS":"GET, POST, PATCH, DELETE, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Idempotency-Key", "Vary": "Origin", "Cache-Control": "no-store" } });
     }
     const protectedPage = /^\/(?:dashboard|business|provider|bookings|booking|locations)(?:\/|$)/.test(path);
     if (administration || protectedPage) {
+      if(builtin){if(administration)return new NextResponse("Not found",{status:404,headers:{"Cache-Control":"no-store"}});return NextResponse.redirect(new URL("/login",publicUrl));}
       const user = await getUserFromCookieHeader(request.headers.get("cookie") || "");
       if (administration && (!user || !isAdminRole(user.role))) {
         const expiredAdministrator = !api && !user && request.cookies.has(REFRESH_COOKIE) ? await getRefreshUserFromCookieHeader(request.headers.get("cookie") || "") : null;
@@ -37,7 +42,7 @@ export async function proxy(request: NextRequest) {
   } catch (error) { return apiError(error); }
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const development = process.env.NODE_ENV === "development";
-  const https = process.env.APP_URL?.startsWith("https://") === true;
+  const https = process.env.APP_URL?.startsWith("https://") === true||publicUrl.protocol==="https:";
   const policy = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://checkout.razorpay.com${development ? " 'unsafe-eval'" : ""}`,
@@ -58,7 +63,7 @@ export async function proxy(request: NextRequest) {
   // Proxy response headers would override those route-specific decisions.
   if (!uploadDownload) {
     response.headers.set("Content-Security-Policy", policy);
-    response.headers.set("Cache-Control", "private, no-store");
+    response.headers.set("Cache-Control", publicRead&&path!=="/api/auth/me"&&path!=="/api/health"?"public, max-age=0, s-maxage=300, stale-while-revalidate=600":"private, no-store");
   }
   if (https) response.headers.set("Strict-Transport-Security", "max-age=31536000");
   return response;
