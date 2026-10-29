@@ -74,14 +74,18 @@ test("JWT access, Redis refresh families and current database roles enforce auth
       await resetPassword(reset, "QA replacement password !"); assert.equal(await getUserFromCookieHeader(headers(active)), null);
       await assert.rejects(() => refreshRequestSession(headers(active)), status(401)); await assert.rejects(create, status(401));
     });
-    await t.test("five incorrect attempts lock the account and the actual login API enforces five requests per window", async () => {
+    await t.test("ten incorrect attempts lock the account and separate accounts retain their sign-in budget", async () => {
       const locked = await registerUser("QA lock", "lock@example.test", password);
-      for (let index = 0; index < 4; index++) await assert.rejects(() => authenticateUser(locked.email, "wrong password"), status(401));
+      for (let index = 0; index < 9; index++) await assert.rejects(() => authenticateUser(locked.email, "wrong password"), status(401));
       await assert.rejects(() => authenticateUser(locked.email, "wrong password"), status(429));
       assert.ok(await loginLockoutRemaining(`user:${locked.id}`) > 850); await assert.rejects(() => authenticateUser(locked.email, password), status(429));
       await clearLoginFailures(`user:${locked.id}`); assert.equal((await authenticateUser(locked.email, password)).id, locked.id);
+      for (let index = 0; index < 11; index++) {
+        const response = await loginRoute(new Request("http://localhost:3000/api/auth/login", { method: "POST", headers: { Origin: "http://localhost:3000", "Content-Type": "application/json" }, body: JSON.stringify({ email: `shared-${index}@example.test`, password: "wrong password" }) }));
+        assert.equal(response.status, 401, "Separate accounts on one IP each have their own budget");
+      }
       const unknown = "missing-rate@example.test";
-      for (let index = 0; index < 6; index++) { const response = await loginRoute(new Request("http://localhost:3000/api/auth/login", { method: "POST", headers: { Origin: "http://localhost:3000", "Content-Type": "application/json" }, body: JSON.stringify({ email: unknown, password: "wrong password" }) })); assert.equal(response.status, index < 4 ? 401 : 429); }
+      for (let index = 0; index < 11; index++) { const response = await loginRoute(new Request("http://localhost:3000/api/auth/login", { method: "POST", headers: { Origin: "http://localhost:3000", "Content-Type": "application/json" }, body: JSON.stringify({ email: unknown, password: "wrong password" }) })); assert.equal(response.status, index < 9 ? 401 : 429); }
     });
     await t.test("trusted seed upgrades an existing account to SUPER_ADMIN without replacing its id or fabricating consent", async () => {
       const seeded = await registerUser("Existing seed", "seed@example.test", password);
@@ -90,7 +94,7 @@ test("JWT access, Redis refresh families and current database roles enforce auth
       assert.equal((await authenticateUser(seeded.email, password)).role, "SUPER_ADMIN"); assert.equal(await fixture.db.collection("user_consents").countDocuments({ user_id: seeded.id }), 0);
       const alias = await bootstrapAdministrator("qa-private#example.test", password); assert.equal((await authenticateUser("qa-private#example.test", password)).id, alias.id);
       const aliasRecord = await fixture.users.findOne({ id: alias.id }); assert.ok(aliasRecord);
-      for (let index = 0; index < 4; index++) await assert.rejects(() => authenticateUser(index % 2 ? String(aliasRecord.email) : "qa-private#example.test", "incorrect password"), status(401));
+      for (let index = 0; index < 9; index++) await assert.rejects(() => authenticateUser(index % 2 ? String(aliasRecord.email) : "qa-private#example.test", "incorrect password"), status(401));
       await assert.rejects(() => authenticateUser("qa-private#example.test", "incorrect password"), status(429));
       await assert.rejects(() => authenticateUser(String(aliasRecord.email), password), status(429));
       await clearLoginFailures(`user:${alias.id}`);

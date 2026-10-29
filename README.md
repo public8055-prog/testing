@@ -162,7 +162,7 @@ New passwords use **Argon2id, 64 MiB, three iterations, one lane**, with unique 
 
 Access JWTs expire after **15 minutes**. An opaque, rotating refresh cookie has an absolute **seven-day** family lifetime. Both cookies are HttpOnly, SameSite=Lax and Secure in production; the only explicit HTTP exception is an unlaunched loopback preview. Refresh hashes/reuse state are in Redis and an independently revocable anchor is in MongoDB. Refresh reuse revokes the family; disable/delete/reset/role changes invalidate the Mongo session anchors. Clients coordinate refresh across tabs and refresh protected navigation through `/session/refresh`.
 
-Login is limited to five attempts per 15 minutes per IP and normalized identifier, with a separate 15-minute lockout after five failed credentials. General API traffic is limited to 100 requests/minute per client IP, plus endpoint-specific limits. Redis security failures fail closed. Signup requires explicit terms/privacy consent and an 18+ affirmation; it does not collect a birth date or fabricate consent for imported users.
+Login allows 10 attempts per 15 minutes per normalized identifier and identifier/IP pair, so accounts sharing Wi-Fi have independent budgets. Ten failed credentials lock an account for 15 minutes. Admin Settings supports current-password proof, confirmation, a minimum 10-character new password and revocation of all existing sessions and recovery codes. General API traffic is limited to 100 requests/minute per client IP, plus endpoint-specific limits. Redis security failures fail closed. Signup requires explicit terms/privacy consent and an 18+ affirmation; it does not collect a birth date or fabricate consent for imported users.
 
 ## Customer, provider and workforce workflows
 

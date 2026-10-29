@@ -5,10 +5,11 @@ const identity = (value: string) => createHash("sha256").update(value).digest("h
 const familyKey = (id: string) => `${redisScope()}:auth:family:${id}`;
 const userKey = (id: string) => `${redisScope()}:auth:user:${identity(id)}`;
 const lockKey = (id: string) => `${redisScope()}:auth:lock:${identity(id)}`;
+export const LOGIN_ATTEMPT_LIMIT = 10;
 export const LOGIN_LOCKOUT_SECONDS = 15 * 60;
 async function available<T>(work: () => Promise<T>): Promise<T> { try { return await work(); } catch (error) { if (error instanceof HttpError) throw error; throw new HttpError(503, "Authentication is temporarily unavailable. Please try again shortly.", 5); } }
-export async function loginLockoutRemaining(id: string) { return available(async () => { const redis = await getRedis(); const count = Number(await redis.get(lockKey(id)) || 0); return count >= 5 ? Math.max(1, await redis.ttl(lockKey(id))) : 0; }); }
-export async function recordFailedLogin(id: string) { return available(async () => Number(await (await getRedis()).eval(`local n=redis.call('INCR',KEYS[1]); if n==1 or n==5 then redis.call('EXPIRE',KEYS[1],ARGV[1]) end; return n`, { keys: [lockKey(id)], arguments: [String(LOGIN_LOCKOUT_SECONDS)] }))); }
+export async function loginLockoutRemaining(id: string) { return available(async () => { const redis = await getRedis(); const count = Number(await redis.get(lockKey(id)) || 0); return count >= LOGIN_ATTEMPT_LIMIT ? Math.max(1, await redis.ttl(lockKey(id))) : 0; }); }
+export async function recordFailedLogin(id: string) { return available(async () => Number(await (await getRedis()).eval(`local n=redis.call('INCR',KEYS[1]); if n==1 or n==tonumber(ARGV[2]) then redis.call('EXPIRE',KEYS[1],ARGV[1]) end; return n`, { keys: [lockKey(id)], arguments: [String(LOGIN_LOCKOUT_SECONDS), String(LOGIN_ATTEMPT_LIMIT)] }))); }
 export async function clearLoginFailures(id: string) { await available(async () => { await (await getRedis()).del(lockKey(id)); }); }
 export async function createRefreshFamily(userId: string, familyId: string, hash: string, expiresAt: number) {
   await available(async () => {

@@ -12,7 +12,7 @@ import { sendEmail,smtpConfigured } from "./email";
 type Row=Document&{_id:string};
 /** Every channel only ever proves mailbox control, so codes are scoped to the step that issued them: signing in, confirming a fresh signup, or recovering a password. */
 export type OtpPurpose="login"|"verify"|"reset";
-const CODE_TTL_MS=10*60000,CODE_ATTEMPTS=5;
+const CODE_TTL_MS=10*60000,CODE_ATTEMPTS=10;
 const emailSchema=z.string().trim().toLowerCase().max(254).pipe(z.email());
 const codeSchema=/^[0-9]{6}$/;
 const otpCopy:Record<OtpPurpose,{subject:string;message:(code:string)=>string}>={
@@ -84,7 +84,7 @@ async function settleEmailOtp(identifier:string,code:string,purpose:OtpPurpose,i
     if(Number(record.attempts)>=CODE_ATTEMPTS-1)await db.collection<Row>("email_otp_codes").deleteOne({_id:userId});
     else await db.collection<Row>("email_otp_codes").updateOne({_id:userId},{$inc:{attempts:1}});
     await auditAuthEvent("otp.failed",{userId,ip,reason:heldReason});
-    if(failures>=5)throw new HttpError(429,"Too many failed sign-in attempts. Please try again later.");
+    if(failures>=10)throw new HttpError(429,"Too many failed sign-in attempts. Please try again later.");
     throw new HttpError(401,"This code is not valid. Request a new code.");
   }
   // Consume exactly the code checked above. Concurrent verification has one

@@ -14,7 +14,7 @@ The built-in public catalogue remains available for a fresh checkout without cre
 | Modern password hash and legacy migration | [`password-hashing.ts`](../lib/password-hashing.ts): Argon2id (64 MiB, t=3, p=1); guarded scrypt upgrade | `tests/password-hashing.test.ts`, actual reset/upgrade race cases; per-process bounded work |
 | Access 15 minutes and rotating refresh | [`auth-sessions.ts`](../lib/auth-sessions.ts), [`auth-state.ts`](../lib/auth-state.ts), refresh API | Signed JWT; absolute 7-day opaque family; Redis hash/reuse state plus Mongo anchors; `tests/auth-sessions.test.ts` |
 | Revocation/reuse/disabled accounts | Mongo anchor deletion and active-user checks; reused refresh revokes family | Auth/reset/admin tests; JWT role alone never authorizes |
-| Login 5/15 minutes and 5-failure lockout | Login route Redis IP+identifier windows, resolved-account lockout | `tests/auth-sessions.test.ts`; separate 15-minute credential lockout |
+| Login 10/15 minutes and 10-failure lockout | Login route Redis identifier/IP-pair and identifier windows, resolved-account lockout | `tests/auth-sessions.test.ts`; separate 15-minute credential lockout |
 | Nonadmin administration 404 | [`proxy.ts`](../proxy.ts), `requireAdmin`/`requireSuperAdmin` | Auth/API browser assertions; authorized resource-not-found remains 404 |
 | Recovery and accessible password fields | [`password-reset.ts`](../lib/password-reset.ts), password-field/reset forms | Hashed 30-minute one-time token; reset tests; actual delivery requires configured adapter, no false delivery claim |
 | Explicit consent and 18+ | [`consent.ts`](../lib/consent.ts), register API and SignupConsent | `tests/registration-consent.test.ts`; no DOB/no fabricated historical consent |

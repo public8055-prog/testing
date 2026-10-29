@@ -9,7 +9,7 @@ import { checkPassword, hashPassword, passwordNeedsUpgrade, DUMMY_PASSWORD_HASH 
 import { canonicalRole, ADMIN_ROLES, isAccountActive, isAdminRole, isSuperAdminRole } from "./roles";
 import type { AccountUser } from "./auth-types";
 import { auditAuthEvent } from "./auth-audit";
-import { clearLoginFailures, loginLockoutRemaining, recordFailedLogin } from "./auth-state";
+import { LOGIN_ATTEMPT_LIMIT, clearLoginFailures, loginLockoutRemaining, recordFailedLogin } from "./auth-state";
 import { createSessionTokens, sessionFromCookieHeader, revokeRequestSession, SESSION_COOKIE, REFRESH_COOKIE, sessionCookieOptions, ACCESS_TOKEN_SECONDS, type SessionTokens } from "./auth-sessions";
 export { checkPassword, hashPassword } from "./password-hashing";
 export { canonicalRole, isAdminRole, isSuperAdminRole } from "./roles";
@@ -50,7 +50,7 @@ async function authenticatedRecord(identifier: string, password: string, ip?: st
   if (!user || !valid || !isAccountActive(user, state)) {
     const failures = await recordFailedLogin(lockIdentity);
     await auditAuthEvent("login.failed", { userId: user?.id, identity: normalized, ip });
-    if (failures >= 5) throw new HttpError(429, "Too many failed sign-in attempts. Please try again later.", await loginLockoutRemaining(lockIdentity));
+    if (failures >= LOGIN_ATTEMPT_LIMIT) throw new HttpError(429, "Too many failed sign-in attempts. Please try again later.", await loginLockoutRemaining(lockIdentity));
     throw new HttpError(401, "Login details are incorrect, or the account is unavailable.");
   }
   // Sign-in does not prove mailbox ownership; booking APIs enforce verification.

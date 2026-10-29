@@ -25,11 +25,15 @@ test("email recovery codes enforce purpose, expiry and one atomic consumption un
     await fixture.db.collection("email_otp_codes").updateOne({ _id: user.id as never }, { $set: { expires_at: "2000-01-01T00:00:00.000Z" } });
     await assert.rejects(() => consumePasswordResetOtp(user.email, expired), (error: unknown) => error instanceof HttpError && error.status === 401);
     const request = (route: string, data: unknown) => new Request(`http://localhost:3000/api/auth/otp/${route}`, { method: "POST", headers: { Origin: "http://localhost:3000", "Content-Type": "application/json" }, body: JSON.stringify(data) });
-    for (let index = 0; index < 5; index++) {
+    for (let index = 0; index < 11; index++) {
       const response = await requestCode(request("request", { email: `missing-${randomUUID()}@example.test`, purpose: "login" }));
-      assert.equal(response.status, 202);
+      assert.equal(response.status, 202, "Separate email addresses have independent budgets");
     }
-    const limited = await verifyCode(request("verify", { email: user.email, code: "000000", purpose: "login" }));
+    for (let index = 0; index < 10; index++) {
+      const response = await verifyCode(request("verify", { email: "limited@example.test", code: "000000", purpose: "login" }));
+      assert.equal(response.status, 401);
+    }
+    const limited = await verifyCode(request("verify", { email: "limited@example.test", code: "000000", purpose: "login" }));
     assert.equal(limited.status, 429); assert.ok(Number(limited.headers.get("Retry-After")) > 0);
   } finally {
     for (const [key, value] of Object.entries(saved)) if (value === undefined) delete process.env[key]; else process.env[key] = value;
