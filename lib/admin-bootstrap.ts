@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
+import { loginIdentifierSchema } from "./auth-input";
 import type { Document } from "mongodb";
 import { ensureAuth, hashPassword } from "./auth";
 import { getMongoDb, withMongoTransaction } from "./mongo";
@@ -8,7 +9,7 @@ import { auditAuthEvent } from "./auth-audit";
 type Row = Document & { _id: string };
 /** Trusted CLI only. No public HTTP endpoint may call this provisioning function. */
 export async function bootstrapAdministrator(identifier: string, password: string, name = "Platform Administrator") {
-  const alias = z.string().trim().toLowerCase().min(3).max(254).regex(/^[^\s<>]+$/).parse(identifier);
+  const alias = loginIdentifierSchema.parse(identifier);
   z.string().min(10).max(128).parse(password); name = z.string().trim().min(2).max(80).parse(name);
   await ensureAuth(); const db = await getMongoDb(), passwordHash = await hashPassword(password), now = new Date().toISOString();
   const result = await withMongoTransaction(async session => {
@@ -35,7 +36,7 @@ export async function bootstrapAdministrator(identifier: string, password: strin
   await revokeUserRefreshFamilies(result.id).catch(() => undefined); await clearLoginFailures(`user:${result.id}`).catch(() => undefined); return result;
 }
 export async function seedAdministratorFromEnvironment() {
-  const email = z.string().min(3).max(254).regex(/^[^\s<>]+$/).parse(process.env.SEED_ADMIN_EMAIL?.trim().toLowerCase());
+  const email = loginIdentifierSchema.parse(process.env.SEED_ADMIN_EMAIL);
   const password = z.string().min(10).max(128).parse(process.env.SEED_ADMIN_PASSWORD);
   return bootstrapAdministrator(email, password, process.env.SEED_ADMIN_NAME || "Platform Administrator");
 }

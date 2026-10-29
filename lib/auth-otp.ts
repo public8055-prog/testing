@@ -87,7 +87,10 @@ async function settleEmailOtp(identifier:string,code:string,purpose:OtpPurpose,i
     if(failures>=5)throw new HttpError(429,"Too many failed sign-in attempts. Please try again later.");
     throw new HttpError(401,"This code is not valid. Request a new code.");
   }
-  await db.collection<Row>("email_otp_codes").deleteMany({user_id:userId});
+  // Consume exactly the code checked above. Concurrent verification has one
+  // winner and cannot delete a replacement issued while this request ran.
+  const consumed=await db.collection<Row>("email_otp_codes").findOneAndDelete({_id:userId,code_hash:record!.code_hash,salt:record!.salt,purpose,expires_at:{$gt:new Date().toISOString()}});
+  if(!consumed)throw new HttpError(401,"This code was already used or replaced. Request a new code.");
   await clearLoginFailures(`user:${userId}`);
   await auditAuthEvent("otp.verified",{userId,ip,reason:`purpose:${purpose}`});
   return user;

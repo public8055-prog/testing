@@ -1,10 +1,12 @@
 "use client";
 import Link from "next/link";
+import {useHydrated} from "@/hooks/use-hydrated";
 import {useState} from "react";
 import {KeyRound} from "lucide-react";
 import {PasswordField} from "./password-field";
 
 export function PasswordResetForm({token,configured}:{token?:string;configured:boolean}){
+ const hydrated=useHydrated();
  const[busy,setBusy]=useState(false),[error,setError]=useState(""),[message,setMessage]=useState("");
  const[codeStage,setCodeStage]=useState(false),[resetEmail,setResetEmail]=useState("");
  async function submit(event:React.FormEvent<HTMLFormElement>){
@@ -26,7 +28,7 @@ export function PasswordResetForm({token,configured}:{token?:string;configured:b
   <span className="mb-6 grid h-12 w-12 place-items-center rounded-2xl bg-teal-50 text-teal-700"><KeyRound size={23}/></span>
   <h1 className="text-2xl font-semibold tracking-tight text-[#142b3b]">{token?"Choose a new password":codeStage?"Check your email":"Forgot your password?"}</h1>
   <p className="mt-3 text-sm leading-6 text-slate-500">{token?"Your recovery link can be used once. Changing your password signs out all existing sessions.":codeStage?`We sent a 6-digit recovery code to ${resetEmail}. A reset link is in the same email as a backup. It expires after 10 minutes.`:configured?"Enter your account email. If an active account matches, we’ll send a 6-digit recovery code and a backup link by email.":"Password recovery is not available until the platform administrator connects email delivery. Contact your administrator for account assistance."}</p>
-  {(configured||token)&&!(Boolean(message)&&!codeStage)&&<form className="mt-6 space-y-5" onSubmit={submit}>
+  {(configured||token)&&!(Boolean(message)&&!codeStage)&&<form method="post" className="mt-6 space-y-5" onSubmit={submit}>
    {token?<PasswordField label="New password" autoComplete="new-password" required minLength={10} maxLength={128}/>:
     !codeStage?<label className="block text-sm font-medium text-slate-600">Email address<input name="email" type="email" autoComplete="email" required maxLength={254} className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4"/></label>:
     <>
@@ -37,7 +39,7 @@ export function PasswordResetForm({token,configured}:{token?:string;configured:b
     </>}
    {!token&&!codeStage&&error&&<p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
    {token&&error&&<p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-   <button disabled={busy} className="w-full rounded-xl bg-[#142b3b] px-5 py-3.5 text-sm font-semibold text-white disabled:opacity-50">{busy?"Please wait…":token||codeStage?"Update password":"Send recovery code"}</button>
+   <button disabled={busy||!hydrated} className="w-full rounded-xl bg-[#142b3b] px-5 py-3.5 text-sm font-semibold text-white disabled:opacity-50">{busy?"Please wait…":token||codeStage?"Update password":"Send recovery code"}</button>
   </form>}
   {message&&<p role="status" className="mt-6 rounded-xl bg-teal-50 p-4 text-sm leading-6 text-teal-800">{message}</p>}
   <Link href="/login" className="mt-6 inline-block text-sm font-semibold text-teal-700">← Back to sign in</Link>

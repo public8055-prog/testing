@@ -1,3 +1,44 @@
+# Hosted login release — 29 October 2026
+
+This is the current release record. Sections below the archive divider describe earlier configurations and runs; their database locations, deployment status and counts are historical.
+
+## Executed checks
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Final TypeScript backend suite | **162 passed; zero failed/skipped** | `artifacts/login-release-backend-final.log` |
+| Gateway TCP reset regression | **Passed**; a reset during asynchronous live authorization does not stop HTTP service | `artifacts/login-gateway-abort-regression.log` |
+| Hosted Atlas/Upstash regression suite | **17 passed; zero failed/skipped** | `artifacts/login-hosted-regressions-verified.log` |
+| Production Webpack build | **Passed**, including TypeScript and private-file sanitization | `artifacts/login-final-build.log` |
+| ESLint / TypeScript after the gateway repair | **Passed** | `artifacts/login-final-lint.log`, `artifacts/login-gateway-final-lint.log`, `artifacts/login-gateway-final-types.log` |
+| Installed dependency audit | **Zero known vulnerabilities** | `artifacts/login-npm-audit-final.json` |
+| Working source, browser output and Git history scan | **Zero configured-secret matches / exposed files**; one reviewed synthetic URI heuristic in `tests/container-config.test.ts` | `artifacts/security-audit.json`; all locally reachable refs fetched and scanned |
+| Google Chrome focused operational acceptance | **All six checks have passing results across the main run and a focused retest** | `artifacts/login-chrome-final-acceptance.log` and `artifacts/login-chrome-prehydration-final.log` |
+| Hosted email-enabled Google Chrome acceptance | **4/4 passed**; includes actual verification-code UI/API completion on an isolated hosted test database | `artifacts/login-chrome-hosted-email-final.log` |
+| Windows WebKit focused acceptance | **Five of six passed**; contact security reached the private inbox and passed security assertions but the runtime-error guard recorded an aborted same-origin `/api/auth/me` request | `artifacts/login-webkit-final-rechecks.log` |
+
+The broader Chrome run passed 51/59 checks, skipped the catalogue-only case on an operational server, and exposed seven failures. Repairs and an eight-check actual Google Chrome rerun passed (`artifacts/login-chrome-rechecks.log`). This is an aggregate across runs, not a claim that one final 59-check run passed. Final focused acceptance includes admin document approval/account search/reports, keyboard password visibility/recovery, shared mobile sign-in for customer/provider/private administrator, verification enforcement, pre-hydration form protection, HTML sign-out/session revocation, and CSP/origin/contact-inbox checks. The first pre-hydration fixture incorrectly required visibility of React's hidden streamed segment with JavaScript disabled; inspecting the delivered hidden form fixed the test. POST defaults and disabled-before-hydration submissions remain enforced.
+
+The earlier selected WebKit run passed 16/21. Admin search initially accepted input before handlers attached; controls now wait for hydration and its final WebKit test passed. The cookie test now asserts actual `Set-Cookie` headers (`HttpOnly`, explicit `SameSite=Lax`, lifetime and HTTPS `Secure`) rather than Windows WebKit's incompatible `sameSite: None` metadata. No CORS, CSP or cookie protection was loosened. An email-enabled hosted WebKit attempt exposed an unhandled TCP reset in the local gateway during asynchronous WebSocket authorization; it also retained navigation-abort diagnostics (`artifacts/login-webkit-hosted-email-final.log`). Connection/request/response error handlers now isolate that failure, and a real TCP reset regression passed. The final hosted WebKit rerun passed HTML sign-out and completed the role/verification assertions, but its strict runtime guard still failed on three departing-document prefetch diagnostics. The gateway remained alive and its MongoDB/Redis health check returned HTTP 200 afterwards (`artifacts/login-webkit-gateway-fixed.log`). Departing-document request-abort diagnostics remain recorded as failures rather than suppressed. Actual Safari on macOS/iPhone is unavailable; Windows WebKit is not Safari hardware certification.
+
+## Data, authentication and recovery
+
+MongoDB Atlas `urbankare-production` and Upstash `urbankare-production-cache` were provisioned in Mumbai and connected to Vercel **Production only**. Protected SMTP/signing configuration was transferred with the owner's approval. Atlas transactions, native TLS Redis PING/pub-sub and SMTP authentication were verified; no real test email, identity document, customer charge or refund was sent. End-to-end inbox delivery and live merchant acceptance remain unverified. Isolated payment tests exercise signed webhooks, idempotency, ownership, atomic booking/payment state and controlled refund providers.
+
+The hosted catalogue contains 48 authored services and eight package categories. The existing owner administrator/hash/private alias was copied through trusted operator scripts; development customers, sample professionals and sessions were not published. A resumed email-enabled attempt initially failed because the previous loopback QA database had stopped after the workstation restart (`artifacts/login-chrome-email-final.log`). It is retained as a failed attempt. The four-check hosted Chrome rerun passed without restarting Docker. Local `npm run dev`/`npm start` use separate hosted `urbankare_dev` data, a separate Redis prefix and signing key. No Docker dependency is needed for normal local or Vercel operation. The original loopback database and encrypted backups are preserved. See [PRODUCTION-SETUP.md](PRODUCTION-SETUP.md) for exact locations and environment names.
+
+The initial real production snapshot was encrypted and restored successfully: **48 collections / 62 documents**, SHA-256 `8e9ed33d6dba9a6c896ad9e7d2301d5dc100bdc477822eb58fd29ea82c535d4e`. Its generated verification database was cleaned up using collection-level permissions; no broader production privilege was granted. Evidence: `artifacts/production-backup-created.json` and `artifacts/production-backup-verified.json`. This verifies a recovery snapshot, not automatic offsite backup scheduling.
+
+Security corrections include bounded shared login identifiers/private aliases, five-attempt shared account lockouts, Redis login/OTP limits, atomic one-use code consumption, preserved unverified session state, and server-side denial of booking/workforce access for unverified accounts. Authentication forms use POST and wait for handlers; no credentials appear in a query string. Test/export/audit tools protect current and retained operator environments without printing values. Credentials and browser artifacts remain ignored/private.
+
+## Remaining launch acceptance
+
+Production deployment must finish successfully and live HTTPS login/role isolation/health must be checked against the deployed commit; local test success alone does not establish that. Keep analytics and public indexing off until the actual business identity/address, support/grievance contacts, legal review and intended launch configuration are supplied. No legal-compliance or penetration-test guarantee is made. Merchant keys, real checkout/refund acceptance, actual Safari hardware, unattended worker/offsite backups and production capacity testing remain separate operating requirements. Free service plans have quotas, and the current Vercel Hobby plan must be reviewed before commercial operation. A Vercel function deployment uses polling/SSE fallback; it does not run the persistent custom WebSocket gateway/maintenance worker.
+
+---
+
+# Archived validation records
+
 # Docker-free public catalogue — 28 October 2026
 
 The public website now has a bundled catalogue and can run without Docker, MongoDB, Redis or authentication credentials. The deployed `/api/services` originally returned HTTP 503. Public home/business/search/category/service-detail data paths now select authored records when operations are not configured. The mode includes 48 service packages, eight package categories and four recurring-professional categories with truthful zero package counts. It never creates providers/reviews or pretends bookings/payments are saved. [DOCKER-FREE.md](DOCKER-FREE.md) contains current local/Vercel setup and hosted-service activation steps.

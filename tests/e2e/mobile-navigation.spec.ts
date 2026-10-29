@@ -48,12 +48,12 @@ test("mobile shell has reachable navigation, compact service search and session-
   await expect(page).toHaveURL(url => url.pathname === "/" && !url.search);
   await page.getByRole("button", { name: "Open navigation", exact: true }).click();
   await expect(more).toBeVisible();
-  await expect(more.getByRole("link", { name: "My account", exact: true })).toHaveAttribute("href", "/dashboard");
+  await expect(more.getByRole("link", { name: "Mobile's account", exact: true })).toHaveAttribute("href", "/dashboard");
   await expect(more.getByRole("link", { name: "Log in", exact: true })).toHaveCount(0);
   await page.keyboard.press("Escape");
   await page.setViewportSize({ width: 1280, height: 900 });
   await expect(navigation).toBeHidden();
-  await expect(page.locator(".header-login")).toHaveText("Account");
+  await expect(page.locator(".header-login")).toContainText("Mobile");
   await expect(page.locator(".header-login")).toHaveAttribute("href", "/dashboard");
   expect(errors).toEqual([]);
 });

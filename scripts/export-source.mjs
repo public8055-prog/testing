@@ -46,8 +46,15 @@ function addPrivateValue(value) {
     privatePatterns.set(bytes.toString("hex"), bytes);
   }
 }
-function scanPrivateValues(bytes) {
-  for (const value of privatePatterns.values()) if (bytes.includes(value)) stop("Export blocked: a configured private credential occurs in an allowlisted file or filename. No credential value was logged.");
+function scanPrivateValues(bytes,sourceName) {
+  for (const value of privatePatterns.values()) if (bytes.includes(value)) stop(`Export blocked: a configured private credential occurs in ${sourceName||"an allowlisted filename or manifest"}. No credential value was logged.`);
+}
+function inspectUriPart(uri,part,username){
+  let decoded;try{decoded=decodeURIComponent(part);}catch{stop("A credential-bearing environment URI contains invalid encoding. Correct it before source export.");}
+  // Redis' built-in default ACL username is public protocol syntax. Passwords,
+  // full connection strings and every non-default identity remain protected.
+  if(username&&/^rediss?:\/\//i.test(uri)&&decoded==="default")return;
+  addPrivateValue(part);addPrivateValue(decoded);
 }
 const credentialName = /(?:^|_)(?:SECRET|TOKEN|PASSWORD|PASSWD|PASS|PRIVATE_KEY|API_KEY|ACCESS_KEY|ENCRYPTION_KEY|KEY_SECRET|KEY_ID)$/i;
 const administratorIdentifier = /^(?:ADMIN_BOOTSTRAP|SEED_ADMIN)_(?:ID|EMAIL)$/i;
@@ -63,16 +70,13 @@ function inspectEnvironment(values) {
         addPrivateValue(value);
         const userinfo = authority.slice(0, authority.lastIndexOf("@")), separator = userinfo.indexOf(":");
         const parts = separator < 0 ? [userinfo] : [userinfo.slice(0, separator), userinfo.slice(separator + 1)];
-        for (const part of parts) {
-          addPrivateValue(part);
-          try { addPrivateValue(decodeURIComponent(part)); } catch { stop("A credential-bearing environment URI contains invalid encoding. Correct it before source export."); }
-        }
+        for (const [index,part] of parts.entries()) inspectUriPart(value,part,index===0);
       }
       try {
         const url = new URL(value);
         if (url.username || url.password) {
           addPrivateValue(value);
-          for (const part of [url.username, url.password]) { addPrivateValue(part); if (part) addPrivateValue(decodeURIComponent(part)); }
+          for (const [index,part] of [url.username, url.password].entries()) inspectUriPart(value,part,index===0);
         }
         for (const [name, parameter] of url.searchParams) if (credentialName.test(name)) addPrivateValue(parameter);
       } catch { /* Non-URL configuration is still checked by its credential variable name. */ }
@@ -82,6 +86,7 @@ function inspectEnvironment(values) {
 async function collectPrivateValues() {
   // Read configuration only for comparison; never copy it into the archive or mutate process.env.
   const privateFiles = (await readdir(root)).filter(name => name.startsWith(".env") && name !== ".env.example").sort();
+  for(const name of [".data/hosted-production.env",".data/production-settings.env",".data/development-settings.env",".data/local-before-hosted.env"]){if(await statOptional(path.join(root,name)))privateFiles.push(name);}
   const environments = [];
   for (const name of privateFiles) {
     const file = path.join(root, name), stat = await safeStat(file);
@@ -135,7 +140,7 @@ async function readStableSource(file) {
     if (opened.ino !== before.ino || opened.dev !== before.dev || opened.size !== before.size || opened.mtimeMs !== before.mtimeMs) stop("Source changed during export. Retry after edits finish.");
     const bytes = await handle.readFile(), after = await handle.stat();
     if (bytes.length !== before.size || after.mtimeMs !== before.mtimeMs || after.ctimeMs !== before.ctimeMs) stop("Source changed during export. Retry after edits finish.");
-    scanPrivateValues(bytes);
+    scanPrivateValues(bytes,file.relative);
     return { bytes, mode: before.mode & 0o111 ? 0o755 : 0o644 };
   } finally { await handle.close(); }
 }

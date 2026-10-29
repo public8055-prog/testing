@@ -29,14 +29,25 @@ export async function createGateway({ port, hostname, upstreamPort }) {
   const server = http.createServer((req, res) => {
     secureHeaders(req, res, () => {
       const request = http.request({ hostname: "127.0.0.1", port: upstreamPort, path: req.url, method: req.method, headers: forwardingHeaders(req) }, upstream => {
+        upstream.on("error", () => res.destroy());
+        upstream.on("aborted", () => res.destroy());
+        if (res.destroyed) { upstream.destroy(); return; }
         res.writeHead(upstream.statusCode || 502, upstream.headers); upstream.pipe(res);
       });
-      request.on("error", () => { if (!res.headersSent) res.writeHead(503, { "Content-Type": "application/json", "Cache-Control": "no-store", "Retry-After": "2" }); res.end('{"error":"Service is temporarily unavailable."}'); });
+      request.on("error", () => { if (res.destroyed || res.writableEnded) return; if (res.headersSent) { res.destroy(); return; } res.writeHead(503, { "Content-Type": "application/json", "Cache-Control": "no-store", "Retry-After": "2" }); res.end('{"error":"Service is temporarily unavailable."}'); });
+      req.on("error", () => request.destroy()); res.on("error", () => request.destroy());
       req.on("aborted", () => request.destroy()); res.on("close", () => request.destroy()); req.pipe(request);
     });
   });
   server.requestTimeout = 30000; server.headersTimeout = 15000;
-  server.on("connection", socket => { sockets.add(socket); socket.once("close", () => sockets.delete(socket)); });
+  server.on("connection", socket => {
+    sockets.add(socket);
+    // During the asynchronous WebSocket authorization handshake, Node has
+    // detached its HTTP parser but ws has not yet installed socket handlers.
+    // A client reset in that interval must close only that connection.
+    socket.on("error", () => socket.destroy());
+    socket.once("close", () => sockets.delete(socket));
+  });
   const wsServer = new WebSocketServer({ noServer: true, maxPayload: 1024, perMessageDeflate: false });
   server.on("upgrade", async (req, socket, head) => {
     const deny = (status = "404 Not Found") => { socket.end(`HTTP/1.1 ${status}\r\nConnection: close\r\n\r\n`); };

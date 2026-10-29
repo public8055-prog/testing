@@ -14,7 +14,7 @@ export type Contract = { id:string; worker_id:string; title:string; starts_on:st
 export type Audit = { id:string; actor_id:string; action:string; entity_id:string; before_value:string|null; after_value:string|null; created_at:string };
 export type WorkforceSnapshot = { business:Business|null; role:"owner"|"manager"|"worker"|null; workers:Worker[]; shifts:Shift[]; todayShifts:Shift[]; corrections:Correction[]; contracts:Contract[]; audit:Audit[]; month:string };
 type Stored<T> = T & { _id:string; lock_version?:number };
-type UserDocument = Stored<{id:string;email:string;name:string;role:string}>;
+type UserDocument = Stored<{id:string;email:string;name:string;role:string;email_verified?:number}>;
 type MembershipDocument = {_id:string;business_id:string;user_id:string;role:"owner"|"manager"};
 type ShiftDocument = Stored<Omit<Shift,"name"|"department"|"service"|"check_in"|"check_out"|"attendance_status"> & {created_at:string}>;
 type AttendanceDocument = Stored<{id:string;shift_id:string;check_in:string;check_out:string|null;status:"present"|"late"|"corrected";recorded_by:string;updated_at:string}>;
@@ -79,6 +79,7 @@ function shiftPipeline(s:Scope,from:string,to:string,ascending=false):Document[]
 ];}
 export async function getWorkforceSnapshot(userId:string,monthInput?:string):Promise<WorkforceSnapshot>{
   await initWorkforce();const c=await collections();let s:Scope;
+  const identity=await c.users.findOne({id:userId});if(Number(identity?.email_verified)===0)throw new HttpError(403,"Verify your email before accessing a workforce workspace.");
   try{s=await scope(userId,c);}catch(error){if(error instanceof HttpError&&error.status===403)return {business:null,role:null,workers:[],shifts:[],todayShifts:[],corrections:[],contracts:[],audit:[],month:new Date().toISOString().slice(0,7)};throw error;}
   const month=/^\d{4}-(0[1-9]|1[0-2])$/.test(monthInput||"")?monthInput!:localDate(new Date().toISOString(),s.business.timezone).slice(0,7);
   const [year,m]=month.split("-").map(Number),until=`${m===12?year+1:year}-${String(m===12?1:m+1).padStart(2,"0")}-01T00:00`;
@@ -118,7 +119,8 @@ export async function mutateWorkforce(userId:string,input:unknown){
   try{return await withMongoTransaction(async session=>{
     const now=new Date().toISOString();
     // A real write forces concurrent Mongo transactions affecting this actor to retry.
-    const actor=await c.users.updateOne({id:userId},{$inc:{lock_version:1}},{session});if(!actor.matchedCount)throw new HttpError(401,"Please sign in to continue.");
+    const actor=await c.users.findOneAndUpdate({id:userId},{$inc:{lock_version:1}},{session,returnDocument:"after"});if(!actor)throw new HttpError(401,"Please sign in to continue.");
+    if(Number(actor.email_verified)===0)throw new HttpError(403,"Verify your email before accessing a workforce workspace.");
     // Account deactivation writes this user first; the actor lock and fresh state read
     // prevent an already-authorized request from committing after revocation.
     const accountState=await (await getMongoDb()).collection("platform_account_status").findOne({user_id:userId},{session});

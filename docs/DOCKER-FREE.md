@@ -1,5 +1,7 @@
 # Docker-free catalogue and Vercel deployment
 
+The catalogue-only instructions below remain the default for a fresh checkout. The live UrbanKare project now has hosted operational services; see [PRODUCTION-SETUP.md](PRODUCTION-SETUP.md) for the current database locations and protected production configuration.
+
 The public site loads its catalogue from authored application data. Docker, MongoDB, Redis, an administrator seed and authentication keys are not required to browse the website. The home page, business information, full service search, category pages, service details and public catalogue APIs work with no database connection. Twelve categories are included: eight package categories with 48 services and four recurring-professional categories whose package count is correctly zero. No providers, reviews or customer records are invented.
 
 ## Run locally
@@ -11,7 +13,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000/`. A fresh checkout needs no environment file for catalogue browsing. To explicitly select this mode with an existing configuration, set `CATALOG_SOURCE=builtin` and `AUTO_START_LOCAL_INFRA=false` in the private `.env.local`, then restart the app. Existing database credentials and volumes are not removed or migrated. The current local preview uses this mode; previous private records remain in their original MongoDB/backup locations.
+Open `http://localhost:3000/`. A fresh checkout needs no environment file for catalogue browsing. To explicitly select this mode with an existing configuration, set `CATALOG_SOURCE=builtin` and `AUTO_START_LOCAL_INFRA=false` in the private `.env.local`, then restart the app. Existing database credentials and volumes are not removed or migrated. Fresh checkouts use this mode. This workstation now uses separate hosted development services; previous private records remain in their original MongoDB/backup locations. See PRODUCTION-SETUP for the current local environment.
 
 For a production build:
 
@@ -54,4 +56,4 @@ Persistent background maintenance/backups need a managed worker or scheduler; Ve
 
 `tests/builtin-catalog.test.ts` tests the complete built-in records, category counts, immutable copies, metadata, API results, mode selection, missing-secret behavior, private-route/write denial, CORS and public limits with MongoDB/Redis URLs empty. `tests/e2e/builtin-catalog.spec.ts` checks the business page, all 48 detail APIs, full listing, category/detail navigation, WhatsApp, honest account/checkout boundaries and mobile accessibility in a credential-free deployment. [VALIDATION.md](VALIDATION.md) records executed results and any deployment limits.
 
-Official references: [Vercel environment variables](https://vercel.com/docs/environment-variables), [Vercel request headers](https://vercel.com/docs/headers/request-headers), [Vercel Functions limits](https://vercel.com/docs/limits). This document describes the public catalogue fix; hosted operational services have not been provisioned on the user's behalf.
+Official references: [Vercel environment variables](https://vercel.com/docs/environment-variables), [Vercel request headers](https://vercel.com/docs/headers/request-headers), [Vercel Functions limits](https://vercel.com/docs/limits). This document describes the public catalogue mode; the hosted operational setup is documented separately in PRODUCTION-SETUP.

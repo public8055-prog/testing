@@ -1,8 +1,8 @@
 # Requirement traceability
 
-This maps the expanded checklist to source and executed acceptance evidence. The complete TypeScript suite passed **119/119**, followed by **12/12 focused startup checks** containing one additional shutdown regression. All **53 distinct Chrome checks** have passing latest results across the recorded runs, and **9 selected WebKit checks** passed. TypeScript, lint and Windows/Linux production builds passed. **Implemented** does not mean externally deployed or certified; [VALIDATION.md](VALIDATION.md) records exact evidence, corrections and remaining operating limits. The latest encrypted snapshot/restore verified 49 collections and 179 documents; older snapshots remain retained.
+This maps the expanded checklist to source and acceptance evidence. The current hosted setup uses Atlas `urbankare_mongo` and Upstash Redis in Mumbai; local development uses a separate Atlas database and Redis scope without Docker. The final backend suite passed **162/162**, and **17/17** isolated checks passed against the hosted services. See [PRODUCTION-SETUP.md](PRODUCTION-SETUP.md) for resource locations and [VALIDATION.md](VALIDATION.md) for exact browser runs, repairs and remaining limits.
 
-The latest default is now a Docker-free, built-in public catalogue. [DOCKER-FREE.md](DOCKER-FREE.md) documents the 48 services/12 categories, public-only boundaries and Vercel setup. Database-backed accounts, admin operations, bookings and payments remain implemented but require separately configured persistent hosted services. The historical aggregate results above are not a certification of those newly provisioned services.
+The built-in public catalogue remains available for a fresh checkout without credentials. Operational deployments require persistent services and protected authentication settings; the Vercel Production environment is now configured. Implementation and passing automated tests do not establish legal compliance, live merchant acceptance, Safari hardware acceptance or an unattended offsite backup service. Existing evidence cited in the tables can predate the current hosted setup.
 
 ## 1. Authentication, accounts and roles
 

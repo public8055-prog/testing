@@ -4,7 +4,9 @@ test("public pages, responsive navigation, images and protected routes work",asy
  const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));
  await page.goto("/",{waitUntil:"domcontentloaded"});
  await expect(page.getByRole("heading",{level:1})).toContainText("Local home");
- await expect(page.locator(".category-card")).toHaveCount(8);
+ const categoryResponse=await request.get("/api/categories");expect(categoryResponse.status()).toBe(200);
+ const publishedCategories=(await categoryResponse.json()).categories;expect(publishedCategories.length).toBeGreaterThan(0);
+ await expect(page.locator(".category-card")).toHaveCount(publishedCategories.length);
  await expect(page.locator(".hero-photo-main img")).toBeVisible();
  await expect.poll(()=>page.locator(".hero-photo-main img").evaluate((el:HTMLImageElement)=>el.complete&&el.naturalWidth>0)).toBe(true);
  await page.screenshot({path:info.outputPath("homepage-desktop.png"),fullPage:true,animations:"disabled"});

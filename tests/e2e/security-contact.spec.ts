@@ -66,7 +66,9 @@ test("production headers, private routes, consent and contact inbox resist cross
     }
     await expect(page).toHaveURL(/\/admin\/dashboard$/);
     await page.goto("/admin/contact"); await expect(page.getByRole("heading", { name: payload.subject, exact: true })).toBeVisible(); await expect(page.getByText(payload.message, { exact: true })).toBeVisible(); expect(await page.evaluate(() => (window as Window & { __storedInjection?: boolean }).__storedInjection)).toBeUndefined(); expect(await page.locator('article img[src="x"]').count()).toBe(0);
-    const cookies = await page.context().cookies(); for (const name of ["urbankare_session", "urbankare_refresh"]) { const session = cookies.find(cookie => cookie.name === name); expect(session?.httpOnly, name).toBe(true); expect(session?.sameSite, name).toBe("Lax"); } expect(cookies.some(cookie => /^_ga/.test(cookie.name))).toBe(false);
+    // Assert SameSite against the raw HTTP headers above. Windows WebKit
+    // normalizes its cookie API to None even for an explicit Lax header.
+    const cookies = await page.context().cookies(); for (const name of ["urbankare_session", "urbankare_refresh"]) { const session = cookies.find(cookie => cookie.name === name); expect(session?.httpOnly, name).toBe(true); } expect(cookies.some(cookie => /^_ga/.test(cookie.name))).toBe(false);
     expect(errors).toEqual([]);
   } finally {
     await db.collection("contact_requests").deleteMany({ email: `privacy-${stamp}@example.test` });

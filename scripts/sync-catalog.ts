@@ -1,10 +1,12 @@
 import { closeDb, initDb, parsePayload } from "../lib/db";
-import { services, categories } from "../lib/data";
+import { categories } from "../lib/data";
+import { builtinServices } from "../lib/builtin-catalog";
 import { mongoCollection, withMongoTransaction } from "../lib/mongo";
 import { invalidateCatalogCache } from "../lib/redis";
 
 /** Explicitly refresh authored service copy, never administrator prices, categories or publication controls. */
 export async function syncAuthoredCatalog() {
+  const services = builtinServices();
   await initDb();
   await invalidateCatalogCache();
   await withMongoTransaction(async session => {

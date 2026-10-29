@@ -9,7 +9,7 @@ import { checkPassword, hashPassword, passwordNeedsUpgrade, DUMMY_PASSWORD_HASH 
 import { canonicalRole, ADMIN_ROLES, isAccountActive, isAdminRole, isSuperAdminRole } from "./roles";
 import type { AccountUser } from "./auth-types";
 import { auditAuthEvent } from "./auth-audit";
-import { clearLoginFailures } from "./auth-state";
+import { clearLoginFailures, loginLockoutRemaining, recordFailedLogin } from "./auth-state";
 import { createSessionTokens, sessionFromCookieHeader, revokeRequestSession, SESSION_COOKIE, REFRESH_COOKIE, sessionCookieOptions, ACCESS_TOKEN_SECONDS, type SessionTokens } from "./auth-sessions";
 export { checkPassword, hashPassword } from "./password-hashing";
 export { canonicalRole, isAdminRole, isSuperAdminRole } from "./roles";
@@ -40,14 +40,20 @@ async function authenticatedRecord(identifier: string, password: string, ip?: st
   const alias = await db.collection<Row>("admin_alias").findOne({ alias: normalized });
   let user = alias ? await db.collection<UserRecord>("users").findOne({ id: String(alias.user_id), role: { $in: [...ADMIN_ROLES] } }) : await db.collection<UserRecord>("users").findOne({ email: normalized });
   const lockIdentity = user ? `user:${user.id}` : `identity:${normalized}`;
+  const locked = await loginLockoutRemaining(lockIdentity);
+  if (locked) {
+    await auditAuthEvent("login.locked", { userId: user?.id, identity: normalized, ip });
+    throw new HttpError(429, "Too many failed sign-in attempts. Please try again later.", locked);
+  }
   const valid = await checkPassword(password, user?.password_hash || DUMMY_PASSWORD_HASH);
   const state = user ? await db.collection<Row>("platform_account_status").findOne({ user_id: user.id }) : null;
   if (!user || !valid || !isAccountActive(user, state)) {
+    const failures = await recordFailedLogin(lockIdentity);
     await auditAuthEvent("login.failed", { userId: user?.id, identity: normalized, ip });
+    if (failures >= 5) throw new HttpError(429, "Too many failed sign-in attempts. Please try again later.", await loginLockoutRemaining(lockIdentity));
     throw new HttpError(401, "Login details are incorrect, or the account is unavailable.");
   }
-  // Unverified accounts can still sign in; sensitive actions are gated by the frontend.
-  // OTP login and password-reset confirm auto-mark email_verified=1.
+  // Sign-in does not prove mailbox ownership; booking APIs enforce verification.
   if (passwordNeedsUpgrade(user.password_hash)) {
     const upgraded = await hashPassword(password), users = db.collection<UserRecord>("users");
     // Hash outside the transaction; never replace a password reset or a concurrent upgrade.

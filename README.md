@@ -11,6 +11,7 @@ app/                         Next.js pages, route handlers, layouts and metadata
   business/                  Membership-protected workforce attendance
   locations/                 Private booking addresses, service pins and optional live GPS
 components/                  Responsive customer, provider, admin and workforce interfaces
+hooks/                       Client hydration guard for interactive forms
 lib/                         Native MongoDB domain services, Redis, auth, payments and reports
 scripts/                     Gateway/startup, worker, seed, migration, backup and audit tools
 public/                      Public authored assets; never private uploads or environment files
@@ -40,13 +41,19 @@ Open [http://localhost:3000/](http://localhost:3000/). For production, run `npm 
 
 Administrators can add vendors with private identity photos, then separately approve/reject/suspend or block accounts. Masked Aadhaar is the primary ID option, with other government photo ID alternatives. **Website activity** combines recorded operations with filters and pagination; catalogue and ongoing-service boards remain available in the same administration navigation. [Vendor/admin guide](docs/PROVIDER-ADMIN.md) explains the workflow, consent, identity review and data storage.
 
+## Hosted production
+
+The live deployment now has a Mumbai MongoDB Atlas database and TLS Upstash Redis, connected only to Vercel Production. The existing administrator account and authored catalogue are initialized there. Protected signing/mail settings enable shared sign-in, email verification and password recovery. Original development data remains local. [PRODUCTION-SETUP.md](docs/PRODUCTION-SETUP.md) lists exact resource names, environment variable names, account behavior, operator commands and remaining launch limits. No secret values are included.
+
 ## Where the data lives
 
 | Data | Current local location | Persistence |
 | --- | --- | --- |
+| Current local-preview records | Hosted Atlas database `urbankare_dev`; separate Redis prefix `urbankare:development` | Protected local environment, distinct signing key and database from production; Docker not required |
+| Production records | Hosted Atlas `urbankare-production`, database `urbankare_mongo`; TLS Upstash `urbankare-production-cache` | Vercel Production-only protected configuration; see PRODUCTION-SETUP |
 | Built-in public catalogue | `lib/data.ts` and `lib/builtin-catalog.ts`, bundled with the deployment | Read-only authored records; no database connection |
-| Application records and uploaded files | MongoDB database `urbankare_mongo`, host `127.0.0.1:27018`, replica set `rs0` | Docker volume `urbankare-infra_mongo_data`, mounted at `/data/db`; uploads use MongoDB GridFS `assets.files`/`assets.chunks` plus metadata |
-| Rate limits, refresh-session state, catalogue cache, queue candidates and live pub/sub | Redis at `127.0.0.1:6380` | Volume `urbankare-infra_redis_data`, AOF enabled; durable booking/queue/notification records remain in MongoDB |
+| Original development records and uploaded files | Preserved MongoDB database `urbankare_mongo`, host `127.0.0.1:27018`, replica set `rs0` | Docker volume `urbankare-infra_mongo_data`, mounted at `/data/db`; uploads use MongoDB GridFS `assets.files`/`assets.chunks` plus metadata |
+| Original local Redis state | Redis at `127.0.0.1:6380` | Volume `urbankare-infra_redis_data`, AOF enabled; durable booking/queue/notification records remain in MongoDB |
 | Original migration evidence | `.data/backups/before-mongodb-2026-10-25T09-39-49-930Z.sqlite` and `mongodb-migration-2026-10-25T09-39-49-930Z.json` | Restricted historical files; not the live database |
 | Encrypted snapshots | Configured `BACKUP_DIRECTORY`; local default `.data/backups/encrypted` | Protected filesystem, or worker-only Compose backup volume |
 
@@ -54,7 +61,7 @@ The completed import recorded **31 collections / 159 documents** with matching c
 
 The supplied data containers are development-only: no authentication/TLS, loopback listeners and one replica-set member. Ports 27018/6380 avoid unrelated services on this workstation; do not stop those unrelated services. `docker compose down` retains volumes; adding `-v` deletes data and is not routine shutdown.
 
-The current default preview at [http://localhost:3000/](http://localhost:3000/) uses the built-in public catalogue. Existing private database records and backups remain preserved. Docker-based startup/recovery was verified on 26 October 2026; that evidence in [LOCAL-STARTUP.md](docs/LOCAL-STARTUP.md) and [BACKUPS.md](docs/BACKUPS.md) now applies to the optional infrastructure mode below.
+The workstation environment now uses hosted `urbankare_dev` and TLS Redis for the full local preview at [http://localhost:3000/](http://localhost:3000/). Run `npm run dev` without Docker. Production uses a different database and signing key. The prior local environment is preserved privately in `.data/local-before-hosted.env`; its original MongoDB records and encrypted backups remain preserved. Docker-based startup/recovery was verified on 26 October 2026; that evidence in [LOCAL-STARTUP.md](docs/LOCAL-STARTUP.md) and [BACKUPS.md](docs/BACKUPS.md) now applies to the optional infrastructure mode below.
 
 ## Optional legacy local database setup
 

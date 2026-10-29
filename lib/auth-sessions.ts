@@ -25,7 +25,7 @@ function secret() {
   return key;
 }
 function hash(value: string) { return createHash("sha256").update(value).digest("hex"); }
-function userView(user: Row): AccountUser { return { id: String(user.id), email: String(user.email), name: String(user.name), role: canonicalRole(user.role), email_verified: Number(user.email_verified) || undefined }; }
+function userView(user: Row): AccountUser { return { id: String(user.id), email: String(user.email), name: String(user.name), role: canonicalRole(user.role), email_verified: user.email_verified === undefined ? undefined : Number(user.email_verified) === 1 ? 1 : 0 }; }
 export function cookieValue(header: string, name: string) {
   const values = header.split(";").map(value => value.trim()).filter(value => value.startsWith(`${name}=`));
   if (values.length !== 1) return "";

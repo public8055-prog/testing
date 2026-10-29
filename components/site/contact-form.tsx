@@ -6,7 +6,7 @@ export function ContactForm() {
   const {catalogOnly}=useAccountSession();
   const [error, setError] = useState(""), [reference, setReference] = useState(""), [pending, setPending] = useState(false);
   if(catalogOnly)return <section className="rounded-2xl border border-teal-200 bg-teal-50 p-6"><h2 className="text-xl font-semibold">Contact options</h2><p className="mt-3 text-sm leading-7">The online support form is not open yet. Use the available contact options on this page. Please do not send payment details or identity documents.</p></section>;
-  return <form className="grid gap-5 rounded-2xl border border-slate-200 bg-white p-6" onSubmit={async event => {
+  return <form method="post" className="grid gap-5 rounded-2xl border border-slate-200 bg-white p-6" onSubmit={async event => {
     event.preventDefault(); const form = event.currentTarget, data = new FormData(form); setError(""); setPending(true);
     try { const response = await fetch("/api/contact", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: data.get("name"), email: data.get("email"), subject: data.get("subject"), message: data.get("message"), consent: data.get("consent") === "on", website: data.get("website") }) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || "Your request could not be saved."); setReference(result.reference); form.reset(); }
     catch (failure) { setError(failure instanceof Error ? failure.message : "Unable to send. Please try again."); } finally { setPending(false); }

@@ -5,7 +5,7 @@ import type { Document } from "mongodb";
 import { mongoFixture } from "./helpers/mongo-fixture";
 
 test("MongoDB platform isolates customers, audits administrators, preserves deleted service history and verifies providers",async()=>{
- const fixture=await mongoFixture("platform");process.env.REDIS_URL="redis://127.0.0.1:6380";
+ const fixture=await mongoFixture("platform",{catalog:true});process.env.REDIS_URL="redis://127.0.0.1:6380";
  const {getCatalogService}=await import("../lib/db");
  const {ensurePlatform,customerData,updateProfile,createReview,createComplaint,toggleFavorite,adminMutation,readPlatformConfig,adminData,getActiveBanners}=await import("../lib/platform");
  const {bootstrapAdministrator}=await import("../lib/admin-bootstrap");
@@ -46,7 +46,15 @@ test("MongoDB platform isolates customers, audits administrators, preserves dele
   const provider=randomUUID();await c("marketplace_providers").insertOne({_id:provider,id:provider,user_id:other,display_name:"QA Provider",category:"Cleaning",active:0,verified:0,created_at:now});
   const review={action:"provider-verification",id:provider,identityChecked:true,contactChecked:true,skillsChecked:false,reference:"QA private reference 001",decision:"verified"};
   await assert.rejects(()=>adminMutation({id:admin,role:"admin"},review),/Complete identity/);
-  const docId=randomUUID();await c("platform_provider_documents").insertOne({_id:docId,id:docId,provider_id:provider,user_id:other,upload_id:randomUUID(),document_type:"identity",status:"approved",created_at:now});
+  const {default:sharp}=await import("sharp");
+  const {storeUpload}=await import("../lib/uploads");
+  const {submitProviderDocument,listProviderDocuments,adminManagementMutation}=await import("../lib/admin-management");
+  const photo=await sharp({create:{width:100,height:100,channels:3,background:"#386477"}}).png().toBuffer();
+  const upload=await storeUpload({ownerUserId:other,purpose:"provider-document",documentType:"identity",originalName:"qa-identity.png",bytes:photo});
+  await submitProviderDocument(other,{uploadId:upload.id,identityKind:"masked_aadhaar",consent:true,redacted:true});
+  const submitted=(await listProviderDocuments(other)).documents[0];
+  await assert.rejects(()=>adminMutation({id:admin,role:"admin"},{...review,skillsChecked:true}),/identity document/);
+  await adminManagementMutation({id:admin,role:"SUPER_ADMIN"},{action:"provider-document-review",id:submitted.id,status:"approved",identityChecked:true,reason:"QA photo, matching name and masking reviewed"});
   await adminMutation({id:admin,role:"admin"},{...review,skillsChecked:true});assert.equal((await c("marketplace_providers").findOne({id:provider}))!.verified,1);
   assert.equal((await adminData({id:admin,role:"admin"})).providers.find(p=>p.id===provider)?.verified,1);
   const banner={action:"banner",title:"An actual featured service",description:"Scheduled for integration verification.",image:"https://images.example.test/banner.jpg",ctaLabel:"Explore services",ctaPath:"/services",active:true,startsAt:"2026-01-01T00:00:00.000Z",endsAt:"2026-12-01T00:00:00.000Z",position:1};

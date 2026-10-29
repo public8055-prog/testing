@@ -8,7 +8,7 @@ import { createCatalogBooking, cancelCatalogBooking, ensureCatalogSlot } from ".
 import { indiaDate, checkoutSchema, isBookableSlot } from "../lib/booking-rules";
 
 test("Mongo quotes, price-change protection, booking replay and rescheduling preserve capacity and payment",async()=>{
-  const fixture=await mongoFixture("bookinglogic");
+  const fixture=await mongoFixture("bookinglogic",{catalog:true});
   const slots=fixture.db.collection("slot_inventory"),services=fixture.db.collection("services"),tokens=fixture.db.collection("service_tokens");
   const customer=randomUUID();await fixture.seedUser(customer);
   try{

@@ -316,6 +316,7 @@ main :is(.text-slate-400,.text-zinc-400) { color:#64748b; }
 :root[data-theme="dark"] [class*="bg-violet-100"]{background-color:#163e3a!important}
 :root[data-theme="dark"] .uk-button{background-color:var(--app-raised)!important;border-color:var(--app-border)!important}
 :root[data-theme="dark"] .uk-button:hover{background-color:rgba(162,244,223,.08)!important}
+:root[data-theme="dark"] .uk-button-white{color:var(--app-text)}
 
 /* Dark mode: hardcoded hex surfaces that blend into the dark background */
 :root[data-theme="dark"] [class*="bg-[#142b3b]"],:root[data-theme="dark"] [class*="bg-[#19344b]"],:root[data-theme="dark"] [class*="bg-[#245b53]"],:root[data-theme="dark"] [class*="bg-[#173e42]"]{background-color:var(--app-raised)!important}

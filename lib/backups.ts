@@ -5,7 +5,8 @@ import {BSON,type Db,type Document,type CreateIndexesOptions,type IndexSpecifica
 import {getMongoDb,withMongoTransaction} from "./mongo";
 
 const FORMAT="urbankare-encrypted-mongodb",VERSION=1,AAD=Buffer.from(`${FORMAT}:${VERSION}`);
-const VERIFY_PREFIX="urbankare_backup_verify_";
+// The full random UUID plus this prefix fits Atlas Free's 38-byte name limit.
+const VERIFY_PREFIX="ukbv_";
 type Row=Document&{_id:string};
 type CollectionSnapshot={name:string;options:Document;indexes:Document[];documents:Document[];sha256:string};
 type Snapshot={format:string;version:number;sourceDatabase:string;createdAt:string;collections:CollectionSnapshot[]};
@@ -96,13 +97,21 @@ export async function verifyEncryptedBackup(file:string){
   for(const collection of data.collections){
    if(collection.name==="_restore_verification_owner")throw new Error("Snapshot uses a reserved verification collection name.");
    await target.createCollection(collection.name,collection.options as CreateCollectionOptions);const restored=target.collection(collection.name);
-   for(let index=0;index<collection.documents.length;index+=250)await restored.insertMany(collection.documents.slice(index,index+250),{ordered:true,bypassDocumentValidation:true});
+   for(let index=0;index<collection.documents.length;index+=250)await restored.insertMany(collection.documents.slice(index,index+250),{ordered:true});
    const rows=await restored.find({},{promoteValues:false,promoteLongs:false}).toArray();if(rows.length!==collection.documents.length||documentDigest(rows)!==collection.sha256)throw new Error("Restored document verification failed.");
    for(const index of collection.indexes){if(index.name==="_id_")continue;const{key,...options}=indexOptions(index);const directions=Object.fromEntries(Object.entries(key).map(([field,direction])=>[field,typeof direction==="string"?direction:Number(direction)]));await restored.createIndex(directions as IndexSpecification,options as CreateIndexesOptions);}
    if(indexDigest(await restored.listIndexes().toArray())!==indexDigest(collection.indexes))throw new Error("Restored index verification failed.");
   }
   return{status:"verified"as const,sourceDatabase:data.sourceDatabase,collections:data.collections.length,documents:data.collections.reduce((sum,c)=>sum+c.documents.length,0),verificationDatabase:name,verificationDatabaseRemoved:true};
  }finally{
-  if(created){const marker=await target.collection("_restore_verification_owner").findOne({owner:name});if(!marker||!name.startsWith(VERIFY_PREFIX)||target.databaseName!==name)throw new Error("Verification cleanup safety check failed.");await target.dropDatabase();}
+  if(created){
+   const marker=await target.collection("_restore_verification_owner").findOne({owner:name});if(!marker||!new RegExp(`^${VERIFY_PREFIX}[a-f0-9]{32}$`).test(name)||target.databaseName!==name)throw new Error("Verification cleanup safety check failed.");
+   try{await target.dropDatabase();}catch(error){
+    if(!error||typeof error!=="object"||!("code"in error)||![13,8000].includes(Number(error.code))||!("message"in error)||!/dropDatabase/.test(String(error.message)))throw error;
+    const collections=await target.listCollections({},{nameOnly:true}).toArray();
+    for(const collection of collections.filter(row=>row.name!=="_restore_verification_owner"))await target.collection(collection.name).drop();
+    await target.collection("_restore_verification_owner").drop();
+   }
+  }
  }
 }

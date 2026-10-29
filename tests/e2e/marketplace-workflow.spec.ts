@@ -35,7 +35,7 @@ test("provider application, administrator approval, customer booking, conflicts 
     await test.step("Professional submits a real profile application",async()=>{
       await professionalPage.goto("/provider/profile");
       await professionalPage.getByLabel("Display name",{exact:true}).fill(professionalName);
-      await professionalPage.getByLabel("Primary service",{exact:true}).selectOption("Housekeeping");
+      await professionalPage.getByLabel("Primary service",{exact:true}).selectOption({label:"Housekeeping"});
       await professionalPage.getByLabel("City / service area",{exact:true}).fill("Bengaluru");
       await professionalPage.getByLabel("Years of experience",{exact:true}).fill("4");
       await professionalPage.getByLabel("About your services",{exact:true}).fill("Clearly labelled QA provider application for testing careful home organization and housekeeping.");

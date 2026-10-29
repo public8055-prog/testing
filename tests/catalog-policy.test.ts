@@ -12,7 +12,7 @@ import { cleanupMarketplaceQa } from "../scripts/cleanup-marketplace-qa";
 import { mongoCollection } from "../lib/mongo";
 
 test("Mongo catalog policies read fresh values and authored sync preserves administrator controls",async()=>{
-  const fixture=await mongoFixture("catalogpolicy");process.env.REDIS_URL="redis://127.0.0.1:6380";
+  const fixture=await mongoFixture("catalogpolicy",{catalog:true});process.env.REDIS_URL="redis://127.0.0.1:6380";
   const admin=randomUUID();await fixture.seedUser(admin);await fixture.users.updateOne({id:admin},{$set:{role:"admin"}});
   const actor={id:admin,role:"admin"},date=indiaDate(3),categories=fixture.db.collection("categories"),services=fixture.db.collection("services");
   try{

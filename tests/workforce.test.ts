@@ -25,6 +25,10 @@ test("Mongo workforce enforces business isolation, worker permissions, atomic sh
  assert.ok(worker);
  assert.equal(worker.user_id,"worker-a");
  assert.equal((await getWorkforceSnapshot("worker-a")).workers.length,1);
+ await db.collection("users").updateOne({id:"worker-a"},{$set:{email_verified:0}});
+ await assert.rejects(()=>getWorkforceSnapshot("worker-a"),/Verify your email/);
+ await assert.rejects(()=>mutateWorkforce("worker-a",{action:"add-worker",name:"Unverified account"}),/Verify your email/);
+ await db.collection("users").updateOne({id:"worker-a"},{$set:{email_verified:1}});
  await assert.rejects(()=>mutateWorkforce("worker-a",{action:"add-worker",name:"Intruder"}),/manager/);
  await assert.rejects(()=>mutateWorkforce("owner-b",{action:"create-shift",workerId:worker.id,start:"2026-10-25T09:00",end:"2026-10-25T17:00"}),/not found/);
  const start=new Date(now.getTime()-5*60000).toISOString().slice(0,16),end=new Date(now.getTime()+2*3600000).toISOString().slice(0,16);

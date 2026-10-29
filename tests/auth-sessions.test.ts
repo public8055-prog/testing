@@ -17,7 +17,7 @@ const headers = (tokens: { accessToken: string; refreshToken: string }) => `${SE
 
 test("JWT access, Redis refresh families and current database roles enforce authentication lifecycle", async t => {
   const fixture = await mongoFixture("authsession"), secret = randomBytes(32).toString("base64");
-  process.env.REDIS_URL = "redis://127.0.0.1:6380"; process.env.AUTH_JWT_SECRET = secret; process.env.APP_URL = "http://localhost:3000";
+  process.env.REDIS_URL ||= "redis://127.0.0.1:6380"; process.env.AUTH_JWT_SECRET = secret; process.env.APP_URL = "http://localhost:3000";
   const password = `QA-${randomBytes(18).toString("hex")}!`, user = await registerUser("QA session", "session@example.test", password);
   const stored = await fixture.users.findOne({ id: user.id }); assert.ok(stored);
   const create = () => createSessionTokens(user.id, String(stored.password_hash));
@@ -46,6 +46,14 @@ test("JWT access, Redis refresh families and current database roles enforce auth
       await assert.rejects(() => refreshRequestSession(headers(first)), status(401));
       assert.equal(await getUserFromCookieHeader(headers(second)), null); await assert.rejects(() => refreshRequestSession(headers(second)), status(401));
       assert.equal(await fixture.db.collection("auth_events").countDocuments({ event: "refresh.reuse_detected", family_id: familyId }), 1);
+    });
+    await t.test("session creation and reload preserve an explicitly unverified mailbox", async () => {
+      const pending = await registerUser("QA pending mailbox", "pending@example.test", password, undefined, { requireVerification: true });
+      const tokens = await createSessionTokens(pending.id);
+      assert.equal(tokens.user.email_verified, 0);
+      assert.equal((await getUserFromCookieHeader(headers(tokens)))?.email_verified, 0);
+      await fixture.users.updateOne({ id: pending.id }, { $set: { email_verified: 1 } });
+      assert.equal((await getUserFromCookieHeader(headers(tokens)))?.email_verified, 1);
     });
     await t.test("concurrent reuse has one rotation winner and still revokes the reused family", async () => {
       const first = await create(), results = await Promise.allSettled([refreshRequestSession(headers(first)), refreshRequestSession(headers(first))]);
@@ -81,6 +89,11 @@ test("JWT access, Redis refresh families and current database roles enforce auth
       const result = await seedAdministratorFromEnvironment(); assert.equal(result.id, seeded.id);
       assert.equal((await authenticateUser(seeded.email, password)).role, "SUPER_ADMIN"); assert.equal(await fixture.db.collection("user_consents").countDocuments({ user_id: seeded.id }), 0);
       const alias = await bootstrapAdministrator("qa-private#example.test", password); assert.equal((await authenticateUser("qa-private#example.test", password)).id, alias.id);
+      const aliasRecord = await fixture.users.findOne({ id: alias.id }); assert.ok(aliasRecord);
+      for (let index = 0; index < 4; index++) await assert.rejects(() => authenticateUser(index % 2 ? String(aliasRecord.email) : "qa-private#example.test", "incorrect password"), status(401));
+      await assert.rejects(() => authenticateUser("qa-private#example.test", "incorrect password"), status(429));
+      await assert.rejects(() => authenticateUser(String(aliasRecord.email), password), status(429));
+      await clearLoginFailures(`user:${alias.id}`);
       process.env.SEED_ADMIN_EMAIL = "qa-private#example.test";
       assert.equal((await seedAdministratorFromEnvironment()).id, alias.id, "The environment seed supports the same private identifiers as shared sign-in");
       process.env.SEED_ADMIN_EMAIL = "invalid identifier";

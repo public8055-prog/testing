@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Menu, X, ShoppingBag, House } from "lucide-react";
-import { isAdminRole } from "@/lib/roles";
+import { canonicalRole, isAdminRole } from "@/lib/roles";
 import { ThemeToggle } from "./theme-toggle";
 import { useCart } from "@/lib/cart-store";
 import { CartDrawer } from "./cart-drawer";
@@ -33,7 +33,7 @@ export function Header() {
   const { user, loading } = useAccountSession();
   const count = useCart(s => s.lines.reduce((sum, line) => sum + line.qty, 0));
   const open = menuPath === pathname;
-  const accountHref = user && isAdminRole(user.role) ? "/admin/dashboard" : "/dashboard";
+  const accountHref = user && isAdminRole(user.role) ? "/admin/dashboard" : user && canonicalRole(user.role) === "PROVIDER" ? "/provider/dashboard" : "/dashboard";
   const name = user ? nameParts(user.name) : null;
   const accountLink = user ? { href: accountHref, label: `${name!.firstName}'s account` } : { href: "/login", label: "Log in" };
 
