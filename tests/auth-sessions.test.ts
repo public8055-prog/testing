@@ -78,8 +78,12 @@ test("JWT access, Redis refresh families and current database roles enforce auth
       const locked = await registerUser("QA lock", "lock@example.test", password);
       for (let index = 0; index < 9; index++) await assert.rejects(() => authenticateUser(locked.email, "wrong password"), status(401));
       await assert.rejects(() => authenticateUser(locked.email, "wrong password"), status(429));
-      assert.ok(await loginLockoutRemaining(`user:${locked.id}`) > 850); await assert.rejects(() => authenticateUser(locked.email, password), status(429));
-      await clearLoginFailures(`user:${locked.id}`); assert.equal((await authenticateUser(locked.email, password)).id, locked.id);
+      assert.ok(await loginLockoutRemaining(`user:${locked.id}`) > 850);
+      assert.equal((await authenticateUser(locked.email, password)).id, locked.id, "Correct credentials recover a failure-limited account");
+      assert.equal(await loginLockoutRemaining(`user:${locked.id}`), 0);
+      for (let index = 0; index < 12; index++) assert.equal((await authenticateUser(locked.email, password)).id, locked.id);
+      for (let index = 0; index < 9; index++) await assert.rejects(() => authenticateUser(locked.email, "incorrect password"), status(401));
+      assert.equal((await authenticateUser(locked.email, password)).id, locked.id, "Successful sign-ins do not consume the failed-attempt budget");
       for (let index = 0; index < 11; index++) {
         const response = await loginRoute(new Request("http://localhost:3000/api/auth/login", { method: "POST", headers: { Origin: "http://localhost:3000", "Content-Type": "application/json" }, body: JSON.stringify({ email: `shared-${index}@example.test`, password: "wrong password" }) }));
         assert.equal(response.status, 401, "Separate accounts on one IP each have their own budget");
@@ -96,7 +100,7 @@ test("JWT access, Redis refresh families and current database roles enforce auth
       const aliasRecord = await fixture.users.findOne({ id: alias.id }); assert.ok(aliasRecord);
       for (let index = 0; index < 9; index++) await assert.rejects(() => authenticateUser(index % 2 ? String(aliasRecord.email) : "qa-private#example.test", "incorrect password"), status(401));
       await assert.rejects(() => authenticateUser("qa-private#example.test", "incorrect password"), status(429));
-      await assert.rejects(() => authenticateUser(String(aliasRecord.email), password), status(429));
+      assert.equal((await authenticateUser(String(aliasRecord.email), password)).id, alias.id, "Correct password clears the shared alias failure budget");
       await clearLoginFailures(`user:${alias.id}`);
       process.env.SEED_ADMIN_EMAIL = "qa-private#example.test";
       assert.equal((await seedAdministratorFromEnvironment()).id, alias.id, "The environment seed supports the same private identifiers as shared sign-in");

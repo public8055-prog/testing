@@ -40,14 +40,16 @@ async function authenticatedRecord(identifier: string, password: string, ip?: st
   const alias = await db.collection<Row>("admin_alias").findOne({ alias: normalized });
   let user = alias ? await db.collection<UserRecord>("users").findOne({ id: String(alias.user_id), role: { $in: [...ADMIN_ROLES] } }) : await db.collection<UserRecord>("users").findOne({ email: normalized });
   const lockIdentity = user ? `user:${user.id}` : `identity:${normalized}`;
-  const locked = await loginLockoutRemaining(lockIdentity);
-  if (locked) {
-    await auditAuthEvent("login.locked", { userId: user?.id, identity: normalized, ip });
-    throw new HttpError(429, "Too many failed sign-in attempts. Please try again later.", locked);
-  }
   const valid = await checkPassword(password, user?.password_hash || DUMMY_PASSWORD_HASH);
   const state = user ? await db.collection<Row>("platform_account_status").findOne({ user_id: user.id }) : null;
   if (!user || !valid || !isAccountActive(user, state)) {
+    // Password sign-in budgets count failures only. A proven valid password
+    // can recover an active account even after its failure budget is exhausted.
+    const locked = await loginLockoutRemaining(lockIdentity);
+    if (locked) {
+      await auditAuthEvent("login.locked", { userId: user?.id, identity: normalized, ip });
+      throw new HttpError(429, "Too many failed sign-in attempts. Please try again later.", locked);
+    }
     const failures = await recordFailedLogin(lockIdentity);
     await auditAuthEvent("login.failed", { userId: user?.id, identity: normalized, ip });
     if (failures >= LOGIN_ATTEMPT_LIMIT) throw new HttpError(429, "Too many failed sign-in attempts. Please try again later.", await loginLockoutRemaining(lockIdentity));
