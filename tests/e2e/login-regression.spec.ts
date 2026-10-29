@@ -89,6 +89,10 @@ test("shared mobile sign-in routes database roles, accepts a private login ID an
           await expect(page).toHaveURL(/\/dashboard$/);
           expect((await (await page.request.get("/api/auth/me")).json()).user.email_verified).toBe(1);
         } else await expect(page.getByText(/Email verification is temporarily unavailable/)).toBeVisible();
+        if (process.env.E2E_EMAIL_CHANNEL !== "1") await page.goto("/dashboard");
+        await page.getByRole("button", { name: "Sign out", exact: true }).click();
+        await expect(page).toHaveURL(/\/login$/);
+        expect((await (await page.request.get("/api/auth/me")).json()).user).toBeNull();
       }
       if (actor.role === "SUPER_ADMIN") {
         await page.screenshot({ path: `artifacts/login-admin-${info.project.name || process.env.E2E_BROWSER || "chromium"}-320.png` });

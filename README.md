@@ -47,7 +47,7 @@ The live deployment now has a Mumbai MongoDB Atlas database and TLS Upstash Redi
 
 ## Where the data lives
 
-| Data | Current local location | Persistence |
+| Data | Current location | Persistence |
 | --- | --- | --- |
 | Current local-preview records | Hosted Atlas database `urbankare_dev`; separate Redis prefix `urbankare:development` | Protected local environment, distinct signing key and database from production; Docker not required |
 | Production records | Hosted Atlas `urbankare-production`, database `urbankare_mongo`; TLS Upstash `urbankare-production-cache` | Vercel Production-only protected configuration; see PRODUCTION-SETUP |
