@@ -1,6 +1,6 @@
 # SanjuNow hosted production setup
 
-Updated 30 October 2026. Hosted resources were provisioned on 28 October 2026. Requested primary URL: https://sanjunow.vercel.app. Domain attachment to the existing Vercel project is required before this host is live. Current project host: https://urbankare.vercel.app from the `main` branch of `public8055-prog/testing`.
+Updated 30 October 2026. Hosted resources were provisioned on 28 October 2026. Primary URL: [https://sanjunow.vercel.app](https://sanjunow.vercel.app), attached to the existing Vercel Production project and verified over HTTPS. The compatibility alias [https://urbankare.vercel.app](https://urbankare.vercel.app) also remains connected. Vercel project slug `urbankare` is retained for its existing integrations. Deployments follow the `main` branch of `public8055-prog/testing`.
 
 ## Where the database and services are
 
@@ -30,7 +30,7 @@ MongoDB and Redis connections, `AUTH_JWT_SECRET`, SMTP credentials and applicati
 | `REDIS_URL` | Integration-managed authenticated TLS Redis connection |
 | `AUTH_JWT_SECRET` | Protected canonical base64 32-byte signing key; never a `NEXT_PUBLIC_` variable |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM_NAME` | Protected existing email delivery configuration |
-| `APP_URL` | `https://urbankare.vercel.app` until the new Vercel domain is attached |
+| `APP_URL` | `https://sanjunow.vercel.app` |
 | `COOKIE_SECURE` | `true` |
 | `CATALOG_SOURCE` | `database` |
 | `AUTO_START_LOCAL_INFRA` | `false` |
