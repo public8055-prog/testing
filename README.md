@@ -245,7 +245,7 @@ This creates `artifacts/urbankare-source.tar.gz` and `artifacts/urbankare-source
 
 ## Public launch boundaries
 
-Analytics is **off**: no GA property, measurement code or analytics cookies are installed. The production site is served over HTTPS at [sanjunow.vercel.app](https://sanjunow.vercel.app); its compatibility alias is [urbankare.vercel.app](https://urbankare.vercel.app). Contact, privacy/terms/cookie/refund drafts and SEO metadata are implemented, but legal identity, monitored support mail, copyright/image rights and operational acceptance need the real operator. `PUBLIC_LAUNCH_READY=false` controls publication metadata/draft labels; it does not block application routes. Keep previews behind real access controls.
+Analytics is **off**: no GA property, measurement code or analytics cookies are installed. The production site is served over HTTPS at [sanjunow.vercel.app](https://sanjunow.vercel.app); the former hostname permanently redirects there. Contact, privacy/terms/cookie/refund drafts and SEO metadata are implemented, but legal identity, monitored support mail, copyright/image rights and operational acceptance need the real operator. `PUBLIC_LAUNCH_READY=false` controls publication metadata/draft labels; it does not block application routes. Keep previews behind real access controls.
 
 Business/contact source defaults are deliberately empty rather than invented. The supplied WhatsApp configuration does not establish a legal business name/address or monitored support/grievance mailboxes. Those verified operator inputs and review or replacement of illustrative catalogue/profile content remain necessary to meet the no-placeholders launch requirement; draft policies and sample catalogue records are not completed business configuration.
 

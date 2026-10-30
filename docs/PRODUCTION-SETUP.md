@@ -1,12 +1,12 @@
 # SanjuNow hosted production setup
 
-Updated 30 October 2026. Hosted resources were provisioned on 28 October 2026. Primary URL: [https://sanjunow.vercel.app](https://sanjunow.vercel.app), attached to the existing Vercel Production project and verified over HTTPS. The compatibility alias [https://urbankare.vercel.app](https://urbankare.vercel.app) also remains connected. Vercel project slug `urbankare` is retained for its existing integrations. Deployments follow the `main` branch of `public8055-prog/testing`.
+Updated 30 October 2026. Hosted resources were provisioned on 28 October 2026. Primary URL: [https://sanjunow.vercel.app](https://sanjunow.vercel.app), attached to the Vercel Production project and verified over HTTPS. The former [https://urbankare.vercel.app](https://urbankare.vercel.app) hostname permanently redirects to the primary URL. The Vercel project is named `sanjunow`; legacy MongoDB and Redis identifiers remain unchanged to preserve existing records and integration keys. Deployments follow the `main` branch of `public8055-prog/testing`.
 
 ## Where the database and services are
 
 | Component | Location | Purpose |
 | --- | --- | --- |
-| Web application | existing Vercel project `urbankare` (project slug retained), team `public8055-7426s-projects`, function region `bom1` | Next.js pages and protected APIs; deployment follows a Git push |
+| Web application | Vercel project `sanjunow`, team `public8055-7426s-projects`, function region `bom1` | Next.js pages and protected APIs; deployment follows a Git push |
 | Application database | MongoDB Atlas resource `urbankare-production`, Mumbai, database `urbankare_mongo` | Accounts, roles, catalogue, bookings, payments, tokens, provider documents in GridFS, notifications, workforce and audit records |
 | Shared state | Upstash resource `urbankare-production-cache`, Mumbai | Cache, sliding-window limits, session revocation/rotation, queue allocation and distributed locks; eviction is disabled |
 | Current local development | Atlas database `urbankare_dev`, separate `urbankare:development` Redis scope and signing key | `npm run dev` and `npm start` use hosted services without Docker and cannot write production records |
