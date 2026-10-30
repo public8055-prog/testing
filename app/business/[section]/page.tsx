@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getWorkforceSnapshot } from "@/lib/workforce";
 import { WorkforceWorkspace } from "@/components/workforce/workspace";
 export const dynamic="force-dynamic";
-export const metadata={title:"Business workspace | UrbanKare",description:"Manage workers, shifts, attendance, and monthly timesheets in your private business workspace."};
+export const metadata={title:"Business workspace | SanjuNow",description:"Manage workers, shifts, attendance, and monthly timesheets in your private business workspace."};
 export default async function BusinessPage({params,searchParams}:{params:Promise<{section:string}>;searchParams:Promise<{month?:string}>}){
  const {section}=await params;
  if(!["dashboard","workers","schedules","attendance","timesheets","reports","services","settings"].includes(section))notFound();

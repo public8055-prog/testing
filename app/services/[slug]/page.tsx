@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const service = await getCatalogService((await params).slug).catch(() => null);
-  return { title: service ? `${service.title} | UrbanKare` : "Home services | UrbanKare", description: service?.description };
+  return { title: service ? `${service.title} | SanjuNow` : "Home services | SanjuNow", description: service?.description };
 }
 
 export default async function ServicePDP({ params }: { params: Promise<{ slug: string }> }) {

@@ -1,4 +1,4 @@
-# UrbanKare
+# SanjuNow
 
 ## Folder structure
 
@@ -24,7 +24,7 @@ docker-compose.infra.yml     Local MongoDB/Redis; optional app/worker profile
 docker-compose.yml           Production app/worker with external data services
 ```
 
-UrbanKare combines a service catalogue, professional marketplace, service queues and workforce attendance. It uses Next.js 16.4, React 19, TypeScript, native MongoDB, Redis and a Node WebSocket gateway. Prices, account permissions, record ownership and workflow transitions are checked on the server. [Requirement traceability](docs/REQUIREMENTS.md) maps features to source and tests; [validation](docs/VALIDATION.md) records executed checks and remaining acceptance work.
+SanjuNow combines a service catalogue, professional marketplace, service queues and workforce attendance. It uses Next.js 16.4, React 19, TypeScript, native MongoDB, Redis and a Node WebSocket gateway. Prices, account permissions, record ownership and workflow transitions are checked on the server. [Requirement traceability](docs/REQUIREMENTS.md) maps features to source and tests; [validation](docs/VALIDATION.md) records executed checks and remaining acceptance work.
 
 ## Start without Docker
 

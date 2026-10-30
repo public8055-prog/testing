@@ -16,9 +16,9 @@ const CODE_TTL_MS=10*60000,CODE_ATTEMPTS=10;
 const emailSchema=z.string().trim().toLowerCase().max(254).pipe(z.email());
 const codeSchema=/^[0-9]{6}$/;
 const otpCopy:Record<OtpPurpose,{subject:string;message:(code:string)=>string}>={
- login:{subject:"Your UrbanKare sign-in code",message:code=>`Your sign-in code is ${code}. It expires in 10 minutes.\n\nIf you did not request this code, you can ignore this email and sign in with your password instead.`},
- verify:{subject:"Confirm your UrbanKare email address",message:code=>`Your verification code is ${code}. It expires in 10 minutes.\n\nIf you did not create a UrbanKare account with this address, you can ignore this email.`},
- reset:{subject:"Reset your UrbanKare password",message:code=>`Your recovery code is ${code}. It expires in 10 minutes.`},
+ login:{subject:"Your SanjuNow sign-in code",message:code=>`Your sign-in code is ${code}. It expires in 10 minutes.\n\nIf you did not request this code, you can ignore this email and sign in with your password instead.`},
+ verify:{subject:"Confirm your SanjuNow email address",message:code=>`Your verification code is ${code}. It expires in 10 minutes.\n\nIf you did not create a SanjuNow account with this address, you can ignore this email.`},
+ reset:{subject:"Reset your SanjuNow password",message:code=>`Your recovery code is ${code}. It expires in 10 minutes.`},
 };
 let ready:Promise<void>|undefined;
 async function ensureOtp(){if(!ready)ready=(async()=>{await ensureAuth();const c=(await getMongoDb()).collection("email_otp_codes");await c.createIndex({user_id:1},{unique:true});await c.createIndex({expires_at:1});})().catch(e=>{ready=undefined;throw e;});await ready;}

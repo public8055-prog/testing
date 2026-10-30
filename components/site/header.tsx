@@ -57,7 +57,7 @@ export function Header() {
     <a href="#main-content" className="skip-link">Skip to content</a>
     <header ref={header} className={`site-header${scrolled ? " site-header-scrolled" : ""}`}>
       <div className="uk-shell header-inner">
-        <Link href="/" aria-label="UrbanKare home" className="brand" onClick={() => setMenuPath(null)}><span className="brand-mark"><House size={23} aria-hidden="true" /><span /></span><span>urban<span className="brand-light">kare</span><span className="brand-period">.</span></span></Link>
+        <Link href="/" aria-label="SanjuNow home" className="brand" onClick={() => setMenuPath(null)}><span className="brand-mark"><House size={23} aria-hidden="true" /><span /></span><span>SanjuNow<span className="brand-period">.</span></span></Link>
         <nav aria-label="Main navigation" className="desktop-nav">{links.map(link => <Link key={link.href} href={link.href} aria-current={pathname === link.href ? "page" : undefined}>{link.label}</Link>)}</nav>
         <div className="header-actions"><ThemeToggle/>
           <button type="button" aria-label={count > 0 ? `Open cart, ${count} items` : "Open cart"} onClick={() => { setMenuPath(null); setCartOpen(true); }} className="cart-toggle"><ShoppingBag size={21} aria-hidden="true" />{count > 0 && <span aria-hidden="true">{count > 99 ? "99+" : count}</span>}</button>

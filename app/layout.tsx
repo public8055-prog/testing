@@ -15,12 +15,12 @@ const business = businessDetails();
 export const metadata: Metadata = {
   metadataBase: new URL(business.publicOrigin || "http://localhost:3000"),
   robots: { index: business.launchReady, follow: business.launchReady },
-  openGraph: { type: "website", siteName: "UrbanKare", title: "UrbanKare — Local services & workforce management", description: "Find local services, follow your bookings and manage team attendance.", locale: "en_IN" },
+  openGraph: { type: "website", siteName: "SanjuNow", title: "SanjuNow — Local services & workforce management", description: "Find local services, follow your bookings and manage team attendance.", locale: "en_IN" },
   twitter: { card: "summary_large_image" },
   verification: process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : undefined,
-  title: "UrbanKare — Local Services & Smarter Workforce Management",
+  title: "SanjuNow — Local Services & Smarter Workforce Management",
   description:
-    "One platform. Many services. Simple attendance. Book local professionals and manage your workers, schedules and attendance with UrbanKare.",
+    "One platform. Many services. Simple attendance. Book local professionals and manage your workers, schedules and attendance with SanjuNow.",
 };
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#ffffff" };

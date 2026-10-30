@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PolicyContent } from "@/components/site/policies";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Cookies & browser storage | UrbanKare", description: "How UrbanKare uses essential sign-in and cart storage, external images and payment services." };
+export const metadata: Metadata = { title: "Cookies & browser storage | SanjuNow", description: "How SanjuNow uses essential sign-in and cart storage, external images and payment services." };
 
 export default function CookiesPage() {
   return <div className="bg-white text-[#162f39]">

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PolicyContent } from "@/components/site/policies";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Cancellations & refunds | UrbanKare", description: "Cancellation windows, refund handling and support for catalogue services and individual provider bookings." };
+export const metadata: Metadata = { title: "Cancellations & refunds | SanjuNow", description: "Cancellation windows, refund handling and support for catalogue services and individual provider bookings." };
 
 export default function RefundPolicyPage() {
   return <div className="bg-white text-[#162f39]">

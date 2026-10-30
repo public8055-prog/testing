@@ -40,7 +40,7 @@ function ImageSource({ src, srcSet, sizes, decoding = "async", alt = "", fallbac
     srcSet={failed ? undefined : srcSet || responsiveSource(src)}
     sizes={failed ? undefined : sizes}
     decoding={decoding}
-    alt={failed ? fallbackAlt ?? (alt ? "UrbanKare service illustration" : "") : alt}
+    alt={failed ? fallbackAlt ?? (alt ? "SanjuNow service illustration" : "") : alt}
     data-image-fallback={failed ? "true" : undefined}
     onError={event => {
       if (!failed) setFailed(true);

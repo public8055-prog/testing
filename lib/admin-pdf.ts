@@ -2,14 +2,14 @@ import PDFDocument from "pdfkit";
 import type { adminReport, paymentReceipt } from "./admin-reports";
 
 async function documentBuffer(write: (pdf: PDFKit.PDFDocument) => void): Promise<Buffer> {
-  const pdf = new PDFDocument({ margin: 44, size: "A4", info: { Title: "UrbanKare administrative record" } });
+  const pdf = new PDFDocument({ margin: 44, size: "A4", info: { Title: "SanjuNow administrative record" } });
   const chunks: Buffer[] = [];
   const result = new Promise<Buffer>((resolve, reject) => { pdf.on("data", chunk => chunks.push(Buffer.from(chunk))); pdf.on("error", reject); pdf.on("end", () => resolve(Buffer.concat(chunks))); });
   write(pdf); pdf.end(); return result;
 }
 export async function reportPdf(report: Awaited<ReturnType<typeof adminReport>>) {
   return documentBuffer(pdf => {
-    pdf.fontSize(21).fillColor("#142b3b").text("UrbanKare operations report");
+    pdf.fontSize(21).fillColor("#142b3b").text("SanjuNow operations report");
     pdf.moveDown().fontSize(10).fillColor("#334155").text(`Booking cohort: ${report.from} to ${report.to} (UTC). Generated ${new Date().toISOString()}`);
     pdf.moveDown().text(`Bookings: ${report.metrics.bookings}    Completed: ${report.metrics.completed}`);
     pdf.text(`Collected INR ${report.metrics.collected.toFixed(2)}    Confirmed refunds INR ${report.metrics.refunded.toFixed(2)}    Net INR ${report.metrics.netCollected.toFixed(2)}`);
@@ -25,7 +25,7 @@ export async function reportPdf(report: Awaited<ReturnType<typeof adminReport>>)
 }
 export async function receiptPdf(receipt: Awaited<ReturnType<typeof paymentReceipt>>) {
   return documentBuffer(pdf => {
-    pdf.fontSize(22).fillColor("#142b3b").text("UrbanKare payment receipt"); pdf.moveDown().fontSize(11).fillColor("#334155");
+    pdf.fontSize(22).fillColor("#142b3b").text("SanjuNow payment receipt"); pdf.moveDown().fontSize(11).fillColor("#334155");
     for (const [label, value] of [["Transaction reference", receipt.reference], ["Booking", receipt.id], ["Source", receipt.source], ["Customer", receipt.customer], ["Amount", `INR ${receipt.amount.toFixed(2)}`], ["Payment method", receipt.method], ["Current status", receipt.status], ["Recorded at (UTC)", receipt.issuedAt]]) pdf.moveDown().text(`${label}: ${value}`);
     pdf.moveDown(2).fontSize(9).text("This confirms a recorded payment and is not a tax invoice. Contact support for a statutory invoice or reconciliation.");
   });

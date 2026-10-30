@@ -15,7 +15,7 @@ test("missing mail cannot mark a public account verified; only unpublished loopb
   const preview = { APP_URL: "http://localhost:3005", COOKIE_SECURE: "false", PUBLIC_LAUNCH_READY: "false" };
   assert.equal(registrationRequiresEmailVerification(preview, false), false);
   assert.equal(registrationRequiresEmailVerification(preview, true), true);
-  for (const environment of [{}, { ...preview, VERCEL: "1" }, { ...preview, APP_URL: "https://urbankare.vercel.app" }, { ...preview, PUBLIC_LAUNCH_READY: "true" }, { ...preview, APP_URL: "http://public.example.test" }]) assert.equal(registrationRequiresEmailVerification(environment, false), true);
+  for (const environment of [{}, { ...preview, VERCEL: "1" }, { ...preview, APP_URL: "https://sanjunow.vercel.app" }, { ...preview, PUBLIC_LAUNCH_READY: "true" }, { ...preview, APP_URL: "http://public.example.test" }]) assert.equal(registrationRequiresEmailVerification(environment, false), true);
 });
 
 test("sign-in rejects oversized, structured, control-character and markup identifiers", () => {

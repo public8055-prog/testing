@@ -1,6 +1,6 @@
 # Docker-free catalogue and Vercel deployment
 
-The catalogue-only instructions below remain the default for a fresh checkout. The live UrbanKare project now has hosted operational services; see [PRODUCTION-SETUP.md](PRODUCTION-SETUP.md) for the current database locations and protected production configuration.
+The catalogue-only instructions below remain the default for a fresh checkout. The live SanjuNow project now has hosted operational services; see [PRODUCTION-SETUP.md](PRODUCTION-SETUP.md) for the current database locations and protected production configuration.
 
 The public site loads its catalogue from authored application data. Docker, MongoDB, Redis, an administrator seed and authentication keys are not required to browse the website. The home page, business information, full service search, category pages, service details and public catalogue APIs work with no database connection. Twelve categories are included: eight package categories with 48 services and four recurring-professional categories whose package count is correctly zero. No providers, reviews or customer records are invented.
 
@@ -28,7 +28,7 @@ The public-mode launcher skips operational authentication/database validation. I
 
 Connect the GitHub repository to Vercel as a Next.js project. `vercel.json` selects `npm ci` and the tested Webpack production build. Do not use a Docker deployment or point Vercel at `.next/standalone`; Vercel handles the Next.js deployment itself. There is no required database or secret environment variable for the public catalogue. If the project already contains copied localhost MongoDB/Redis settings, automatic mode recognizes that they are not usable from Vercel and selects the built-in catalogue. Remove stale settings or explicitly set `CATALOG_SOURCE=builtin` for clarity. New environment settings require a new deployment.
 
-The site's origin can come from Vercel's project/deployment hostname if `APP_URL` is absent. Set `APP_URL=https://urbankare.vercel.app` when that is the desired public origin. Keep `PUBLIC_LAUNCH_READY=false` until the real business/policy/operating details have been reviewed. Google Analytics remains off. The previously supplied public WhatsApp number `+91 9717621336` is the default contact option when the corresponding variable is absent; an explicitly empty `PUBLIC_WHATSAPP_NUMBER` disables it.
+The site's origin can come from Vercel's project/deployment hostname if `APP_URL` is absent. Set `APP_URL=https://sanjunow.vercel.app` when that is the desired public origin. Keep `PUBLIC_LAUNCH_READY=false` until the real business/policy/operating details have been reviewed. Google Analytics remains off. The previously supplied public WhatsApp number `+91 9717621336` is the default contact option when the corresponding variable is absent; an explicitly empty `PUBLIC_WHATSAPP_NUMBER` disables it.
 
 ## Modes and safety
 

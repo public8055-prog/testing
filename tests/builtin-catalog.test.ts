@@ -27,14 +27,14 @@ test("public catalogue is complete without Docker, MongoDB, Redis or signing cre
     const first=builtinServices()[0];assert.equal((await db.getCatalogService(first.slug))?.title,first.title);assert.equal(await db.getCatalogService("not-present"),null);assert.deepEqual(await db.readServices("not-present"),[]);
     assert.deepEqual(await platform.readPlatformConfig(),{});assert.deepEqual(await platform.getActiveBanners(),[]);assert.equal((await market.listMarketplaceProviders()).count,0);assert.deepEqual(await db.readProfessionals(),[]);
     const api=await import("../app/api/services/route"),health=await import("../app/api/health/route"),me=await import("../app/api/auth/me/route");
-    const response=await api.GET(new Request("https://urbankare.vercel.app/api/services?limit=100"));assert.equal(response.status,200);assert.equal((await response.json()).total,48);assert.match(response.headers.get("cache-control")!,/s-maxage=300/);
-    assert.equal((await(await health.GET()).json()).operations,"not-configured");assert.equal((await(await me.GET(new Request("https://urbankare.vercel.app/api/auth/me",{headers:{Cookie:"urbankare_session=forged"}}))).json()).user,null);
+    const response=await api.GET(new Request("https://sanjunow.vercel.app/api/services?limit=100"));assert.equal(response.status,200);assert.equal((await response.json()).total,48);assert.match(response.headers.get("cache-control")!,/s-maxage=300/);
+    assert.equal((await(await health.GET()).json()).operations,"not-configured");assert.equal((await(await me.GET(new Request("https://sanjunow.vercel.app/api/auth/me",{headers:{Cookie:"urbankare_session=forged"}}))).json()).user,null);
   });
   await t.test("proxy permits public browsing and same-origin preflight while denying every operational write",async()=>{
     const {proxy}=await import("../proxy");
-    const request=(path:string,method="GET",origin?:string)=>new NextRequest(`https://urbankare.vercel.app${path}`,{method,headers:{"x-forwarded-for":"198.18.0.77",...(origin?{Origin:origin}:{})}});
+    const request=(path:string,method="GET",origin?:string)=>new NextRequest(`https://sanjunow.vercel.app${path}`,{method,headers:{"x-forwarded-for":"198.18.0.77",...(origin?{Origin:origin}:{})}});
     assert.equal((await proxy(request("/api/services"))).headers.get("x-middleware-next"),"1");
-    assert.equal((await proxy(request("/api/services","OPTIONS","https://urbankare.vercel.app"))).status,204);
+    assert.equal((await proxy(request("/api/services","OPTIONS","https://sanjunow.vercel.app"))).status,204);
     assert.equal((await proxy(request("/api/services","GET","https://untrusted.example.test"))).status,403);
     for(const path of ["/api/bookings","/api/auth/login","/api/quote","/api/payments/orders","/api/provider/documents"]){const result=await proxy(request(path,"POST"));assert.equal(result.status,503);assert.equal((await result.json()).code,"OPERATIONS_NOT_CONFIGURED");}
     assert.equal((await proxy(request("/api/admin/providers","POST"))).status,404);assert.equal((await proxy(request("/admin/providers"))).status,404);assert.equal((await proxy(request("/.env.local"))).status,404);

@@ -4,7 +4,7 @@ import {readBookingLocation} from "@/lib/booking-location";
 import {HttpError} from "@/lib/http";
 import {LocationWorkspace} from "@/components/locations/location-workspace";
 export const dynamic="force-dynamic";
-export const metadata={title:"Service location | UrbanKare",robots:{index:false,follow:false}};
+export const metadata={title:"Service location | SanjuNow",robots:{index:false,follow:false}};
 export default async function ServiceLocationPage({params}:{params:Promise<{source:string;id:string}>}){
   const {source,id}=await params,user=await getCurrentUser();
   if(!user)redirect(`/login?next=${encodeURIComponent(`/locations/${source}/${id}`)}`);

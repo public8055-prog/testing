@@ -86,7 +86,7 @@ export async function createStripeCheckout(bookingId: string, userId: string) {
       "payment_intent_data[capture_method]": "automatic",
       "line_items[0][quantity]": "1", "line_items[0][price_data][currency]": "inr",
       "line_items[0][price_data][unit_amount]": String(amount),
-      "line_items[0][price_data][product_data][name]": "UrbanKare home service booking",
+      "line_items[0][price_data][product_data][name]": "SanjuNow home service booking",
       success_url: `${origin}/bookings/${encodeURIComponent(booking.id)}?stripe_session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/bookings/${encodeURIComponent(booking.id)}?payment=pending`,
     });

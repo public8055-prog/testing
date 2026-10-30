@@ -69,7 +69,7 @@ a, button, input, select, summary, textarea { -webkit-tap-highlight-color: trans
 .service-detail-nav a { transition: color 160ms, background-color 160ms; }
 .service-detail-nav a:hover { color: var(--service-accent, #6d4c96); background: var(--service-soft, #f2edf8); }
 
-/* UrbanKare public design system */
+/* SanjuNow public design system */
 .uk-shell{width:min(1240px,calc(100% - 80px));margin-inline:auto}
 .skip-link{position:fixed;left:16px;top:-100px;z-index:100;background:white;padding:14px;border:2px solid var(--teal)}
 .skip-link:focus{top:12px}.site-header{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid #e9ece7}

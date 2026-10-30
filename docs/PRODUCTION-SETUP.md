@@ -1,12 +1,12 @@
-# UrbanKare hosted production setup
+# SanjuNow hosted production setup
 
-Updated 29 October 2026. Hosted resources were provisioned on 28 October 2026. Production runs at https://urbankare.vercel.app from the `main` branch of `public8055-prog/testing`.
+Updated 30 October 2026. Hosted resources were provisioned on 28 October 2026. Requested primary URL: https://sanjunow.vercel.app. Domain attachment to the existing Vercel project is required before this host is live. Current project host: https://urbankare.vercel.app from the `main` branch of `public8055-prog/testing`.
 
 ## Where the database and services are
 
 | Component | Location | Purpose |
 | --- | --- | --- |
-| Web application | Vercel project `urbankare`, team `public8055-7426s-projects`, function region `bom1` | Next.js pages and protected APIs; deployment follows a Git push |
+| Web application | existing Vercel project `urbankare` (project slug retained), team `public8055-7426s-projects`, function region `bom1` | Next.js pages and protected APIs; deployment follows a Git push |
 | Application database | MongoDB Atlas resource `urbankare-production`, Mumbai, database `urbankare_mongo` | Accounts, roles, catalogue, bookings, payments, tokens, provider documents in GridFS, notifications, workforce and audit records |
 | Shared state | Upstash resource `urbankare-production-cache`, Mumbai | Cache, sliding-window limits, session revocation/rotation, queue allocation and distributed locks; eviction is disabled |
 | Current local development | Atlas database `urbankare_dev`, separate `urbankare:development` Redis scope and signing key | `npm run dev` and `npm start` use hosted services without Docker and cannot write production records |
@@ -14,7 +14,7 @@ Updated 29 October 2026. Hosted resources were provisioned on 28 October 2026. P
 | Private operator configuration | Ignored `.data/hosted-production.env` and `.data/production-settings.env` on this workstation | Trusted initialization and diagnosis only; never publish or upload these files to Git |
 | Original encrypted backups | `.data/backups/encrypted`, key in the separately protected configured key file | Recovery evidence; never deploy the key or publish the snapshots |
 
-Open **Vercel → UrbanKare → Storage**, select the named resource, then **Open in MongoDB Atlas** or **Open in Upstash** to inspect it. The hosting integrations populate protected credentials in Vercel. Connection strings are deliberately absent from this document.
+Open the existing Vercel project → **Storage**, select the named resource, then **Open in MongoDB Atlas** or **Open in Upstash** to inspect it. The hosting integrations populate protected credentials in Vercel. Connection strings are deliberately absent from this document.
 
 The hosted database was initialized with the authored catalogue and the existing owner administrator account, preserving its Argon2id hash and private login alias. Existing sessions were not copied. Development customers, sample professionals and historical development bookings were not published to production. The original local database and backups were preserved. This workstation now uses a separate hosted development database; its original private environment is backed up at `.data/local-before-hosted.env`. Ordinary local startup does not point at production. The developer administrator account and catalogue are initialized there as well, with a distinct signing key. The prior catalogue-only deployment did not accept public account registrations.
 
@@ -30,7 +30,7 @@ MongoDB and Redis connections, `AUTH_JWT_SECRET`, SMTP credentials and applicati
 | `REDIS_URL` | Integration-managed authenticated TLS Redis connection |
 | `AUTH_JWT_SECRET` | Protected canonical base64 32-byte signing key; never a `NEXT_PUBLIC_` variable |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM_NAME` | Protected existing email delivery configuration |
-| `APP_URL` | `https://urbankare.vercel.app` |
+| `APP_URL` | `https://urbankare.vercel.app` until the new Vercel domain is attached |
 | `COOKIE_SECURE` | `true` |
 | `CATALOG_SOURCE` | `database` |
 | `AUTO_START_LOCAL_INFRA` | `false` |

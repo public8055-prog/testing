@@ -49,7 +49,7 @@ test("desktop discovery searches the catalog and opens category and service deta
 
   await test.step("Browse the storefront, search and category", async () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("link", { name: "UrbanKare home" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "SanjuNow home" })).toBeVisible();
     await expect(page.locator("main h1")).toBeVisible();
     await assertNoHorizontalOverflow(page);
     await capturePage(page, testInfo, "01-desktop-storefront.png");

@@ -11,7 +11,7 @@ export function businessDetails() {
     supportEmail: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : "",
     grievanceName: process.env.GRIEVANCE_OFFICER_NAME?.trim() || "",
     grievanceEmail: process.env.GRIEVANCE_EMAIL?.trim() || "",
-    whatsapp: /^[1-9]\d{9,14}$/.test(phone) ? `https://wa.me/${phone}?text=${encodeURIComponent("Hello UrbanKare, I need help with a service.")}` : "",
+    whatsapp: /^[1-9]\d{9,14}$/.test(phone) ? `https://wa.me/${phone}?text=${encodeURIComponent("Hello SanjuNow, I need help with a service.")}` : "",
     publicOrigin,
     launchReady: process.env.PUBLIC_LAUNCH_READY === "true" && Boolean(publicOrigin && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && process.env.BUSINESS_LEGAL_NAME?.trim() && process.env.BUSINESS_ADDRESS?.trim() && process.env.GRIEVANCE_OFFICER_NAME?.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(process.env.GRIEVANCE_EMAIL || "")),
   };

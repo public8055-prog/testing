@@ -38,7 +38,7 @@ export function AuthForm({mode="login",next="/dashboard",otpConfigured=false}:{m
     <div>
       <span className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-4 py-2 text-xs font-semibold text-teal-800"><ShieldCheck size={15}/> One account. Everything organised.</span>
       <h1 className="mt-7 text-4xl font-semibold leading-[1.12] tracking-[-.045em] text-[#142b3b] sm:text-5xl">A little less to manage.<br/><span className="text-teal-700">A lot more peace of mind.</span></h1>
-      <p className="mt-6 max-w-md text-base leading-7 text-slate-500">Your services, your people, and your everyday plans. Bring it all together with UrbanKare.</p>
+      <p className="mt-6 max-w-md text-base leading-7 text-slate-500">Your services, your people, and your everyday plans. Bring it all together with SanjuNow.</p>
       <div className="mt-8 space-y-4 text-sm text-slate-600">{["Book local professionals on your schedule","Keep your service history in one place","Manage your team and attendance"].map(item=><p key={item} className="flex items-center gap-3"><Check size={17} className="text-teal-600"/>{item}</p>)}</div>
     </div>
     <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_12px_60px_-30px_#0f243a40] sm:p-10">
@@ -77,7 +77,7 @@ export function AuthForm({mode="login",next="/dashboard",otpConfigured=false}:{m
         <button disabled={busy||!hydrated} className="flex h-12 w-full items-center justify-center gap-3 rounded-xl bg-[#142b3b] font-semibold text-white transition hover:bg-teal-800 disabled:opacity-50">{busy?"Verifying…":"Verify email"}<ArrowRight size={17}/></button>
       </form>}
       {mode==="register"&&stage==="code"&&<p className="mt-4 text-center text-xs text-slate-400">Did not receive it? <button type="button" onClick={()=>resendCode("verify")} className="font-medium text-teal-700">Resend the code</button></p>}
-      <p className="mt-6 text-center text-sm text-slate-500">{mode==="register"?"Already have an account?":"New to UrbanKare?"} <Link href={`/${mode==="register"?"login":"register"}?next=${encodeURIComponent(returnPath)}`} className="font-semibold text-teal-700">{mode==="register"?"Sign in":"Create an account"}</Link></p>
+      <p className="mt-6 text-center text-sm text-slate-500">{mode==="register"?"Already have an account?":"New to SanjuNow?"} <Link href={`/${mode==="register"?"login":"register"}?next=${encodeURIComponent(returnPath)}`} className="font-semibold text-teal-700">{mode==="register"?"Sign in":"Create an account"}</Link></p>
       {mode==="login"&&<div className="mt-5 border-t border-slate-100 pt-4 text-center text-xs leading-5 text-slate-400">
         {otpConfigured&&<button type="button" disabled={busy||!hydrated} onClick={()=>{setChannel(current=>current==="password"?"code":"password");setStage("email");setSentTo("");setError("");setNotice("");}} className="inline-flex min-h-11 items-center px-2 font-medium text-teal-700 disabled:opacity-50">{channel==="password"?"Sign in with an email code instead":"Use my password instead"}</button>}
         {otpConfigured&&channel==="code"&&stage==="code"&&<button type="button" onClick={()=>{setStage("email");setError("");setNotice("");}} className="font-medium text-teal-700">Send a new code</button>}

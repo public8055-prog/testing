@@ -73,7 +73,7 @@ export async function openRazorpay(booking: { id: string; name?: string; phone?:
       key: readyOrder.keyId,
       amount: readyOrder.amount,
       currency: readyOrder.currency,
-      name: "UrbanKare",
+      name: "SanjuNow",
       description: "Professional home services",
       order_id: readyOrder.orderId,
       prefill: { name: booking.name, contact: booking.phone },
